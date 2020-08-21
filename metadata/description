@@ -1,0 +1,2 @@
+Configuration of Ubuntu core environment for the AMADEE AMAZE Project. The dockerfile and driver data was moved from /opt to /mnt/rootfs
+- Disabeled wifi powersaving option

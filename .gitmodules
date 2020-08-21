@@ -1,0 +1,3 @@
+[submodule "rootfs_part/coreenv/ubuntu-basic-core/amadee20_cws"]
+	path = rootfs_part/coreenv/ubuntu-basic-core/amadee20_cws
+	url = git@gitlab.aau.at:aau-cns/ros_ws/amadee20_cws.git
