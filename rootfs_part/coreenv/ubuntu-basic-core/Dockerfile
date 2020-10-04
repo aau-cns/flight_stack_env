@@ -62,6 +62,7 @@ RUN \
   adduser core systemd-journal && \
   adduser core dialout && \
   adduser core plugdev && \
+  adduser core i2c && \
   mkdir -p /home/core/ && \
   chown core:core /home/core
 
