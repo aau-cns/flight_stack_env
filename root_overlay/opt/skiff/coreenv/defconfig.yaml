@@ -17,6 +17,7 @@ containers:
       - /mnt:/mnt
       - /run/udev:/run/udev
       - /mnt/persist/core:/home/core
+      - /etc/resolv.conf:/etc/resolv.conf:ro
     privileged: true
     capAdd:
       - ALL
