@@ -88,7 +88,8 @@ COPY ./init-home.sh /opt/skiff-core/scripts/init-home.sh
 COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
 COPY ./ros_env.bash /opt/chb/ros_env.bash
 COPY ./amadee20_cws/src /opt/amadee/src
-COPY ./50-myusb.rules /etc/udev/rules.d/50-myusb.rules
+COPY ./90-tty.rules /etc/udev/rules.d/90-tty.rules
+COPY ./90-i2c.rules /etc/udev/rules.d/90-i2c.rules
 COPY ./90-ublox.rules /etc/udev/rules.d/90-ublox.rules
 
 RUN apt-get update && \
