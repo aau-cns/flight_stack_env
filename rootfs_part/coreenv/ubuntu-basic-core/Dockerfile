@@ -199,7 +199,7 @@ RUN apt-get update && apt-get install -y \
 
 ### IDS camera driver installation
 WORKDIR /opt/amadee/driver/camera/ids
-RUN mkdir ueye && tar xvfz uEyeSDK-4.93.00-ARM_LINUX_IDS_GNUEABI_HF.tgz -C ueye && cd ueye && bash ueye_4.93.0.986_armhf.run --auto && cd .. && rm -rf ueye
+RUN mkdir ueye && tar xvfz ids-software-suite-linux-arm64-4.94.tgz -C ueye && cd ueye && bash ueye_4.94.0.1220_arm64.run --auto && cd .. && rm -rf ueye
 
 ## Matrix vision camera installation
 ## Ros packages for mv-camera
