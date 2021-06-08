@@ -1,3 +1,7 @@
+# General information
+## Compile with number of cores-1 to prevent overload
+## RUN make -j`nproc --ignore=1`
+
 FROM ubuntu:bionic
 
 LABEL maintainer="Christian Brommer <christian.brommer@aau.at>"
@@ -28,18 +32,28 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
   curl \
   git \
   htop \
+  glances \
   locales \
   lsb-release \
   nano \
+  vim \
+  less \
+  screen \
+  tmux \
+  autotools-dev \
+  cmake \
   net-tools \
+  iputils-ping \
   openssh-client \
+  mosh \
   rsync \
   software-properties-common \
   sudo \
   systemd \
   unzip \
   usbutils \
-  vim \
+  apt-utils \
+  ca-certificates \
   wget && \
   apt-get autoremove -y && \
   rm -rf /var/lib/apt/lists/*
@@ -97,21 +111,21 @@ COPY ./90-tty.rules /etc/udev/rules.d/90-tty.rules
 COPY ./90-i2c.rules /etc/udev/rules.d/90-i2c.rules
 COPY ./90-ublox.rules /etc/udev/rules.d/90-ublox.rules
 
+
+# General
+## System Tools
+
+### USB Interface Tools
+
 RUN apt-get update && \
  apt-get dist-upgrade -y && \
  apt-get install -y \
- apt-utils \
- cmake \
- iputils-ping \
- mosh \
- less \
- screen \
- tmux \
- autotools-dev \
- ca-certificates && \
+ libusb-1.0-0-dev && \
  apt-get autoremove -y && \
  rm -rf /var/lib/apt/lists/*
 
+WORKDIR /opt
+RUN git clone https://github.com/mvp/uhubctl && cd uhubctl && make -j`nproc --ignore=1` && make install
 
 # Install ROS
 ## install packages
@@ -188,7 +202,7 @@ RUN mkdir build
 WORKDIR /opt/amadee/driver/camera/librealsense/build
 #NOTE: Do not disable the realsense examples, they define important symbols for libusb
 RUN cmake ../ -DCMAKE_BUILD_TYPE=Release
-RUN make uninstall && make clean -j2 && make && make install
+RUN make uninstall && make clean -j`nproc --ignore=1` && make -j`nproc --ignore=1` && make install
 
 ## IDS camera installation
 ### Ros packages for IDS camera
