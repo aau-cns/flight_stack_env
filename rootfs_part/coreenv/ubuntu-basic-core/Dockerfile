@@ -127,6 +127,19 @@ RUN apt-get update && \
 WORKDIR /opt
 RUN git clone https://github.com/mvp/uhubctl && cd uhubctl && make -j`nproc --ignore=1` && make install
 
+## Python
+
+RUN apt-get update && \
+ apt-get dist-upgrade -y && \
+ apt-get install -y \
+ python-pip \
+ python3-pip && \
+ apt-get autoremove -y && \
+ rm -rf /var/lib/apt/lists/*
+
+### Install typing python package (useful for IDE development)
+RUN pip install typing && pip3 install typing
+
 # Install ROS
 ## install packages
 RUN apt-get update && apt-get install -q -y \
@@ -165,6 +178,11 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
     ros-melodic-mavros \
     ros-melodic-mavros-extras \
+    ros-melodic-geometry-msgs \
+    ros-melodic-sensor-msgs \
+    ros-melodic-std-msgs \
+    ros-melodic-angles \
+    ros-melodic-control-toolbox \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/chb
@@ -172,6 +190,23 @@ RUN wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/
     chmod +x install_geographiclib_datasets.sh
 RUN ./install_geographiclib_datasets.sh
 
+## Lidar Lite Dependencies
+RUN apt-get update && apt-get install -y \
+    libxmlrpcpp-dev \
+    librosconsole-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+## Aruco Detection
+RUN apt-get update && apt-get install -y \
+    ros-melodic-tf2-geometry-msgs\
+    ros-melodic-image-geometry\
+    && rm -rf /var/lib/apt/lists/*
+
+## Dependency for "image undistortion node"
+RUN apt-get update && apt-get install -y \
+    ros-melodic-pcl-ros \
+    ros-melodic-tf-conversions \
+    && rm -rf /var/lib/apt/lists/*
 
 # Camera driver, ros and linux package installation
 COPY ./amadee20_cws/driver /opt/amadee/driver
