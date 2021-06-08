@@ -269,20 +269,100 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install OpenCv for OpenVins
+## Install dependencies
 RUN apt-get update && apt-get install -y \
     python-numpy \
     python3-numpy \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get remove -y \
+    x264 \
+    libx264-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y \
+    build-essential checkinstall cmake pkg-config yasm \
+    git gfortran \
+    libjpeg8-dev libpng-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+## Use this repo for non-ARM
+#RUN add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
+## Use this repo for ARM
+RUN add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"
+
+
+RUN apt-get update && apt-get install -y \
+    libjasper1 \
+    libtiff-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y \
+    libavcodec-dev libavformat-dev libswscale-dev libdc1394-22-dev \
+    libxine2-dev libv4l-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/include/libv4l1-videodev.h /usr/include/linux/videodev.h
+
+RUN apt-get update && apt-get install -y \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+    libgtk2.0-dev libtbb-dev qt5-default \
+    libatlas-base-dev \
+    libfaac-dev libmp3lame-dev libtheora-dev \
+    libvorbis-dev libxvidcore-dev \
+    libopencore-amrnb-dev libopencore-amrwb-dev \
+    libavresample-dev \
+    x264 v4l-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+## Optional dependencies
+RUN apt-get update && apt-get install -y \
+    libprotobuf-dev protobuf-compiler \
+    libgoogle-glog-dev libgflags-dev \
+    libgphoto2-dev libeigen3-dev libhdf5-dev doxygen \
+    && rm -rf /var/lib/apt/lists/*
+
+## Download OpenCV source
 WORKDIR /opt/
 RUN mkdir opencv
 WORKDIR /opt/opencv/
-RUN git clone --branch 3.4.6 https://github.com/opencv/opencv/
-RUN git clone --branch 3.4.6 https://github.com/opencv/opencv_contrib/
+
+RUN git clone --branch 4.5.2 https://github.com/opencv/opencv/
+RUN git clone --branch 4.5.2 https://github.com/opencv/opencv_contrib/
+
+## Compile OpenCV
 RUN mkdir opencv/build/
 WORKDIR /opt/opencv/opencv/build/
-RUN cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules ..
-RUN make -j2
+
+RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
+-D CMAKE_INSTALL_PREFIX=/usr/local \
+-D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+-D ENABLE_NEON=ON \
+-D ENABLE_VFPV3=ON \
+-D WITH_TBB=ON \
+-D BUILD_TBB=ON \
+-D WITH_V4L=ON \
+-D WITH_LIBV4L=ON \
+-D WITH_VTK=OFF \
+-D WITH_OPENMP=ON \
+-D WITH_OPENCL=OFF \
+-D BUILD_TIFF=ON \
+-D WITH_FFMPEG=ON \
+-D BUILD_TESTS=OFF \
+-D WITH_EIGEN=OFF \
+-D WITH_GSTREAMER=OFF \
+-D WITH_QT=OFF \
+-D OPENCV_ENABLE_NONFREE=ON \
+-D INSTALL_C_EXAMPLES=OFF \
+-D INSTALL_PYTHON_EXAMPLES=OFF \
+-D OPENCV_GENERATE_PKGCONFIG=ON \
+-D BUILD_EXAMPLES=OFF ..
+
+RUN make -j`nproc --ignore=1`
 RUN make install
 
 
