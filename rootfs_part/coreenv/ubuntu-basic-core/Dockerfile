@@ -50,6 +50,7 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
   software-properties-common \
   sudo \
   systemd \
+  stress \
   unzip \
   usbutils \
   apt-utils \
@@ -341,8 +342,8 @@ WORKDIR /opt/opencv/opencv/build/
 RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
 -D CMAKE_INSTALL_PREFIX=/usr/local \
 -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
--D ENABLE_NEON=ON \
--D ENABLE_VFPV3=ON \
+-D ENABLE_NEON=OFF \
+-D ENABLE_VFPV3=OFF \
 -D WITH_TBB=ON \
 -D BUILD_TBB=ON \
 -D WITH_V4L=ON \
@@ -353,7 +354,7 @@ RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
 -D BUILD_TIFF=ON \
 -D WITH_FFMPEG=ON \
 -D BUILD_TESTS=OFF \
--D WITH_EIGEN=OFF \
+-D WITH_EIGEN=ON \
 -D WITH_GSTREAMER=OFF \
 -D WITH_QT=OFF \
 -D OPENCV_ENABLE_NONFREE=ON \
