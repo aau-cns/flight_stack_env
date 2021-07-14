@@ -62,7 +62,6 @@ RUN \
   adduser core systemd-journal && \
   adduser core dialout && \
   adduser core plugdev && \
-  adduser core i2c && \
   mkdir -p /home/core/ && \
   chown core:core /home/core
 
@@ -86,6 +85,7 @@ RUN systemctl set-default multi-user.target && \
 
 # Amaze setup
 COPY ./init-home.sh /opt/skiff-core/scripts/init-home.sh
+COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
 COPY ./ros_env.bash /opt/chb/ros_env.bash
 COPY ./amadee20_cws/src /opt/amadee/src
 COPY ./50-myusb.rules /etc/udev/rules.d/50-myusb.rules
