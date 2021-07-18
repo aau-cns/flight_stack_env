@@ -366,6 +366,8 @@ RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
 RUN make -j`nproc --ignore=1`
 RUN make install
 
+# Mask unneeded service to prevent it from failing
+RUN systemctl mask kmod-static-nodes
 
 WORKDIR /home/core
 ENTRYPOINT ["/lib/systemd/systemd"]
