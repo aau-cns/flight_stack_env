@@ -59,6 +59,12 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
   apt-get autoremove -y && \
   rm -rf /var/lib/apt/lists/*
 
+# AMADEE Setup specific packages
+RUN apt-get update && apt-get install -y \
+    parallel \
+    && rm -rf /var/lib/apt/lists/*
+
+
 # For ubuntu < 20.04 udev is a separate package
 RUN apt-get update && apt-get install -y \
     udev \
@@ -126,7 +132,16 @@ RUN apt-get update && \
  rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt
-RUN git clone https://github.com/mvp/uhubctl && cd uhubctl && make -j`nproc --ignore=1` && make install
+RUN git clone --branch v2.4.0 https://github.com/mvp/uhubctl && cd uhubctl && make -j`nproc --ignore=1` && make install
+
+### I2C interface tools
+
+RUN apt-get update && \
+ apt-get dist-upgrade -y && \
+ apt-get install -y \
+ i2c-tools && \
+ apt-get autoremove -y && \
+ rm -rf /var/lib/apt/lists/*
 
 ## Python
 

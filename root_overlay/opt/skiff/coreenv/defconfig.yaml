@@ -11,7 +11,7 @@ containers:
     disableInit: true
     workingDirectory: /home/core
     mounts:
-      #- /dev:/dev
+      - /dev:/dev
       #- /etc/resolv.conf:/etc/resolv.conf:ro
       - /sys:/sys
       - /lib/modules:/lib/modules
