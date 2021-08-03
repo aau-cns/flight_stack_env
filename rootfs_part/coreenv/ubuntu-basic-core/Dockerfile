@@ -112,6 +112,7 @@ RUN systemctl set-default multi-user.target && \
 # Amaze setup
 COPY ./init-home.sh /opt/skiff-core/scripts/init-home.sh
 COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
+COPY ./etc/fstab /etc/fstab
 COPY ./ros_env.bash /opt/chb/ros_env.bash
 COPY ./amadee20_cws/src /opt/amadee/src
 COPY ./90-tty.rules /etc/udev/rules.d/90-tty.rules

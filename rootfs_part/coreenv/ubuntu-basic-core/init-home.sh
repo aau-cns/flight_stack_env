@@ -14,7 +14,8 @@ if [ ! -d /home/${1}/catkin_ws ]; then
     echo "Setting up catkin_ws for ${1}..."
     sudo -u $1 bash <<EOF
         mkdir -p ${HOME}/rec_local
-        mkdir -p ${HOME}/rec_media
+        mkdir -p /amadee_data
+        ln -s /amadee_data ${HOME}/rec_media
         source /opt/ros/${ROS_DISTRO}/setup.bash
         mkdir -p ${HOME}/catkin_ws/src
         cd ${HOME}/catkin_ws

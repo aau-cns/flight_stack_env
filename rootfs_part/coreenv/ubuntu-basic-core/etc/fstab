@@ -1,0 +1,1 @@
+LABEL=amadee_drive /amadee_data auto noauto,x-systemd.automount 0 2
