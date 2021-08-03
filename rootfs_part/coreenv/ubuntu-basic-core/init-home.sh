@@ -28,6 +28,7 @@ if [ ! -d /home/${1}/catkin_ws ]; then
         source .bashrc #reload bash
         if [ -d /home/${1}/catkin_ws/src/matrixvision_camera ]; then
         touch /home/${1}/catkin_ws/src/matrixvision_camera/mv_camera/mv_driver/driver_installed
+        touch /home/${1}/catkin_ws/src/matrixvision_camera/CATKIN_IGNORE
         fi
 EOF
 fi
