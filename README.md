@@ -21,7 +21,40 @@ i2cdetect -y 1
 
 https://github.com/garmin/LIDARLite_RaspberryPi_Library/
 
+## Pull the Skiff AMADEE image from a docker registry
 
+1. Stop the skiff core service
+
+```sh
+systemctl stop skiff-core
+```
+
+2. Delete the previously build image
+
+```sh
+docker rmi core
+```
+3. Login for dockerhub (it could be that this command needs to be run 3-6 times till the command is successfull)
+
+```sh
+docker login --username christianbrommer --password <password>
+```
+4. Pull the image
+
+```sh
+docker pull christianbrommer/amadee:latest
+```
+5. Rename the image
+
+```sh
+docker tag amadee core
+```
+
+6. Restart the skiff-core service
+
+```sh
+systemctl start skiff-core
+```
 
 ## Raspberry setup
 
