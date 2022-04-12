@@ -5,8 +5,13 @@
 To enable the i2c interface on the PI, add the following two lines to '/boot/config.txt'
 
 ```
-dtparam=i2c1=on
+# Enable GPIO features
+dtparam=i2c1=true
 dtparam=i2c_arm=on
+dtparam=i2c_arm_baudrate=400000
+dtparam=spi=on
+
+max_usb_current=1
 ```
 
 ```
@@ -47,7 +52,7 @@ docker pull christianbrommer/amadee:latest
 5. Rename the image
 
 ```sh
-docker tag amadee core
+docker tag amadee skiff/core-ubuntu-basic:latest
 ```
 
 6. Restart the skiff-core service
