@@ -4,8 +4,10 @@
 
 FROM ubuntu:bionic
 
+LABEL author="Christian Brommer <christian.brommer@aau.at>"
 LABEL maintainer="Christian Brommer <christian.brommer@aau.at>"
-LABEL description="Amadee Amaze Environment"
+LABEL maintainer="Martin Scheiber <martin.scheiber@aau.at>"
+LABEL description="CNS Flightstack Environment"
 
 # setup environment
 ENV LANG C.UTF-8
@@ -59,7 +61,7 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
   apt-get autoremove -y && \
   rm -rf /var/lib/apt/lists/*
 
-# AMADEE Setup specific packages
+# Flightstack Setup specific packages
 RUN apt-get update && apt-get install -y \
     parallel \
     && rm -rf /var/lib/apt/lists/*
@@ -109,7 +111,8 @@ RUN systemctl set-default multi-user.target && \
          -exec echo \{} \; \
          -exec rm \{} \;
 
-# Amaze setup
+# Flightstack Setup
+# TODO(scm): this part can be setup from public git repo once available
 COPY ./init-home.sh /opt/skiff-core/scripts/init-home.sh
 COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
 COPY ./etc/fstab /etc/fstab
@@ -136,7 +139,6 @@ WORKDIR /opt
 RUN git clone --branch v2.4.0 https://github.com/mvp/uhubctl && cd uhubctl && make -j`nproc --ignore=1` && make install
 
 ### I2C interface tools
-
 RUN apt-get update && \
  apt-get dist-upgrade -y && \
  apt-get install -y \
@@ -145,7 +147,6 @@ RUN apt-get update && \
  rm -rf /var/lib/apt/lists/*
 
 ## Python
-
 RUN apt-get update && \
  apt-get dist-upgrade -y && \
  apt-get install -y \
@@ -202,7 +203,7 @@ RUN apt-get update && apt-get install -y \
     ros-melodic-control-toolbox \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/chb
+WORKDIR /opt/flightstack
 RUN wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh && \
     chmod +x install_geographiclib_datasets.sh
 RUN ./install_geographiclib_datasets.sh
@@ -213,20 +214,8 @@ RUN apt-get update && apt-get install -y \
     librosconsole-dev \
     && rm -rf /var/lib/apt/lists/*
 
-## Aruco Detection
-RUN apt-get update && apt-get install -y \
-    ros-melodic-tf2-geometry-msgs\
-    ros-melodic-image-geometry\
-    && rm -rf /var/lib/apt/lists/*
-
-## Dependency for "image undistortion node"
-RUN apt-get update && apt-get install -y \
-    ros-melodic-pcl-ros \
-    ros-melodic-tf-conversions \
-    && rm -rf /var/lib/apt/lists/*
-
 # Camera driver, ros and linux package installation
-COPY ./amadee20_cws/driver /opt/amadee/driver
+# COPY ./amadee20_cws/driver /opt/amadee/driver
 
 ## RealSense installation
 ### Ros packages for realsense t265 ROS
@@ -236,48 +225,6 @@ RUN apt-get update && apt-get install -y \
     ros-melodic-ddynamic-reconfigure \
     && rm -rf /var/lib/apt/lists/*
 
-### Linux packages for realsense t265 SDK (for Ubuntu Bionic (18))
-RUN apt-get update && apt-get install -y \
-    git \
-    libssl-dev \
-    libusb-1.0-0-dev \
-    pkg-config \
-    libgtk-3-dev \
-    libglfw3-dev \
-    libgl1-mesa-dev \
-    libglu1-mesa-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-### Compile realsense driver
-WORKDIR /opt/amadee/driver/camera/librealsense
-RUN mkdir build
-WORKDIR /opt/amadee/driver/camera/librealsense/build
-#NOTE: Do not disable the realsense examples, they define important symbols for libusb
-RUN cmake ../ -DCMAKE_BUILD_TYPE=Release
-RUN make uninstall && make clean -j`nproc --ignore=1` && make -j`nproc --ignore=1` && make install
-
-## IDS camera installation
-### Ros packages for IDS camera
-RUN apt-get update && apt-get install -y \
-    ros-melodic-image-transport \
-    ros-melodic-camera-calibration-parsers \
-    ros-melodic-camera-info-manager \
-    && rm -rf /var/lib/apt/lists/*
-
-### IDS camera driver installation
-WORKDIR /opt/amadee/driver/camera/ids
-RUN mkdir ueye && tar xvfz ids-software-suite-linux-arm64-4.94.tgz -C ueye && cd ueye && bash ueye_4.94.0.1220_arm64.run --auto && cd .. && rm -rf ueye
-
-## Matrix vision camera installation
-## Ros packages for mv-camera
-RUN apt-get update && apt-get install -y \
-    ros-melodic-camera-info-manager \
-    ros-melodic-driver-base \
-    && rm -rf /var/lib/apt/lists/*
-
-#WORKDIR /opt/amadee/driver/camera/matrix_vision
-#RUN bash install_mvBlueFOX_ARM.sh -u
-#RUN touch $(rospack find mv_camera)/mv_driver/driver_installed
 
 # MavLink build components
 RUN apt-get update && apt-get install -y \
@@ -285,102 +232,17 @@ RUN apt-get update && apt-get install -y \
     python-future python-lxml \
     && rm -rf /var/lib/apt/lists/*
 
-# Install OpenCv for OpenVins
-## Install dependencies
-RUN apt-get update && apt-get install -y \
-    python-numpy \
-    python3-numpy \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get remove -y \
-    x264 \
-    libx264-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y \
-    build-essential checkinstall cmake pkg-config yasm \
-    git gfortran \
-    libjpeg8-dev libpng-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y \
-    software-properties-common \
-    && rm -rf /var/lib/apt/lists/*
-
 ## Use this repo for non-ARM
 #RUN add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
 ## Use this repo for ARM
 RUN add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"
 
-
-RUN apt-get update && apt-get install -y \
-    libjasper1 \
-    libtiff-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y \
-    libavcodec-dev libavformat-dev libswscale-dev libdc1394-22-dev \
-    libxine2-dev libv4l-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN ln -s /usr/include/libv4l1-videodev.h /usr/include/linux/videodev.h
-
-RUN apt-get update && apt-get install -y \
-    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-    libgtk2.0-dev libtbb-dev qt5-default \
-    libatlas-base-dev \
-    libfaac-dev libmp3lame-dev libtheora-dev \
-    libvorbis-dev libxvidcore-dev \
-    libopencore-amrnb-dev libopencore-amrwb-dev \
-    libavresample-dev \
-    x264 v4l-utils \
-    && rm -rf /var/lib/apt/lists/*
-
-## Optional dependencies
+## other dependencies
 RUN apt-get update && apt-get install -y \
     libprotobuf-dev protobuf-compiler \
     libgoogle-glog-dev libgflags-dev \
     libgphoto2-dev libeigen3-dev libhdf5-dev doxygen \
     && rm -rf /var/lib/apt/lists/*
-
-## Download OpenCV source
-WORKDIR /opt/
-RUN mkdir opencv
-WORKDIR /opt/opencv/
-
-RUN git clone --branch 4.5.2 https://github.com/opencv/opencv/
-RUN git clone --branch 4.5.2 https://github.com/opencv/opencv_contrib/
-
-## Compile OpenCV
-RUN mkdir opencv/build/
-WORKDIR /opt/opencv/opencv/build/
-
-RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
--D CMAKE_INSTALL_PREFIX=/usr/local \
--D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
--D ENABLE_NEON=OFF \
--D ENABLE_VFPV3=OFF \
--D WITH_TBB=ON \
--D BUILD_TBB=ON \
--D WITH_V4L=ON \
--D WITH_LIBV4L=ON \
--D WITH_VTK=OFF \
--D WITH_OPENMP=ON \
--D WITH_OPENCL=OFF \
--D BUILD_TIFF=ON \
--D WITH_FFMPEG=ON \
--D BUILD_TESTS=OFF \
--D WITH_EIGEN=ON \
--D WITH_GSTREAMER=OFF \
--D WITH_QT=OFF \
--D OPENCV_ENABLE_NONFREE=ON \
--D INSTALL_C_EXAMPLES=OFF \
--D INSTALL_PYTHON_EXAMPLES=OFF \
--D OPENCV_GENERATE_PKGCONFIG=ON \
--D BUILD_EXAMPLES=OFF ..
-
-RUN make -j`nproc --ignore=1`
-RUN make install
 
 # Mask unneeded service to prevent it from failing
 RUN systemctl mask kmod-static-nodes
