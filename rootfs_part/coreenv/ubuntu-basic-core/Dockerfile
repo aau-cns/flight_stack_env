@@ -112,15 +112,18 @@ RUN systemctl set-default multi-user.target && \
          -exec rm \{} \;
 
 # Flightstack Setup
+COPY ./init_scripts/ /opt/skiff-core/scripts/
+
+# workspace and home directory scripts
 # TODO(scm): this part can be setup from public git repo once available
-COPY ./init-home.sh /opt/skiff-core/scripts/init-home.sh
-COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
+COPY ./ros_cws/flightstack_cws/src /opt/flightstack_cws/src
+COPY ./home /opt/flightstack/home
+
+# system configuration
 COPY ./etc/fstab /etc/fstab
-COPY ./ros_env.bash /opt/chb/ros_env.bash
-COPY ./amadee20_cws/src /opt/amadee/src
-COPY ./90-tty.rules /etc/udev/rules.d/90-tty.rules
-COPY ./90-i2c.rules /etc/udev/rules.d/90-i2c.rules
-COPY ./90-ublox.rules /etc/udev/rules.d/90-ublox.rules
+COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
+COPY ./udev/rules.d/90-i2c.rules /etc/udev/rules.d/
+COPY ./udev/rules.d/90-tty.rules /etc/udev/rules.d/
 
 
 # General

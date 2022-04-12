@@ -1,4 +1,6 @@
-# AMADEE20 Skiff Environment
+# CNS Flightstack: SkiffOS Environment
+
+[![License](https://img.shields.io/badge/License-AAUCNS-green.svg)](./LICENSE)
 
 ## Before the first boot
 
@@ -83,4 +85,3 @@ Further information: https://askubuntu.com/questions/698990/distinguishing-betwe
 - Overloading /etc/modules in the host system does not work. But /etc/modules can be used inside the core environment all modules are available in there.
 
 ..
-
