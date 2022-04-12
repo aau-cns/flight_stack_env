@@ -1,7 +1,7 @@
 containers:
   core:
     startAfterCreate: true
-    image: skiff/core-ubuntu-basic:latest
+    image: aaucns/flightstack:latest
     tty: true
     restartPolicy: "always"
     # If this is commented, then the container will use the DNS info from root on container start
@@ -12,12 +12,12 @@ containers:
     workingDirectory: /home/core
     mounts:
       - /dev:/dev
-      #- /etc/resolv.conf:/etc/resolv.conf:ro
       - /sys:/sys
       - /lib/modules:/lib/modules
       - /mnt:/mnt
       - /run/udev:/run/udev
       - /mnt/persist/core:/home/core
+      - /etc/resolv.conf:/etc/resolv.conf:ro
     privileged: true
     capAdd:
       - ALL
@@ -35,7 +35,7 @@ users:
     auth:
       copyRootKeys: true
 images:
-  skiff/core-ubuntu-basic:latest:
+  aaucns/flightstack:latest:
     build:
-      source: /mnt/rootfs/coreenv/ubuntu-basic-core
+      source: /mnt/rootfs/coreenv/flightstack
       squash: true
