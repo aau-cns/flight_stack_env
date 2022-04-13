@@ -116,7 +116,7 @@ COPY ./init_scripts/ /opt/skiff-core/scripts/
 
 # workspace and home directory scripts
 # TODO(scm): this part can be setup from public git repo once available
-COPY ./ros_cws/flightstack_cws/src /opt/flightstack_cws/src
+COPY ./flightstack_cws/src /opt/ros_ws/flightstack_cws/src
 COPY ./home /opt/flightstack/home
 
 # system configuration

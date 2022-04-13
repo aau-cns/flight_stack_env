@@ -1,7 +1,7 @@
 containers:
   core:
     startAfterCreate: true
-    image: aaucns/flightstack:latest
+    image: mascheiber/flightstack:arm64_bionic
     tty: true
     restartPolicy: "always"
     # If this is commented, then the container will use the DNS info from root on container start
@@ -35,7 +35,10 @@ users:
     auth:
       copyRootKeys: true
 images:
-  aaucns/flightstack:latest:
+  mascheiber/flightstack:arm64_bionic:
+    # pull:
+    #   policy: ifnotexists
+    #   registry:
     build:
       source: /mnt/rootfs/coreenv/flightstack
       squash: true

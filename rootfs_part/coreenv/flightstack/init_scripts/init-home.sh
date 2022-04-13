@@ -67,11 +67,7 @@ while getopts ':ahmu:o:i:' OPTION; do
     esac
 done
 
-## CHANGING OWNERSHIP OF HOME
-echo "Chowning mount for ${USER_ID}..."
-chown ${USER_ID}:${USER_ID} /home/$1
-
-check if user has home directory setup
+# check if user has home directory setup
 if [ ! -f /home/${USER_ID}/.user_initated ]; then
   echo "Setting up /etc/skel for ${USER_ID}..."
   rsync -rhv \
@@ -83,7 +79,7 @@ if [ ! -f /home/${USER_ID}/.user_initated ]; then
   echo "Setting up configs for ${USER_ID}..."
   rsync -rhv \
     --ignore-existing  \
-    /opt/flightstack/home/* /home/${USER_ID}/
+    /opt/flightstack/home/ /home/${USER_ID}/
   echo "# source /home/${USER_ID}/.ros_env.bash" >> ${HOME}/.bashrc
 
   touch /home/${USER_ID}/.user_initated
@@ -97,21 +93,21 @@ if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
 
   # setup commands
   MAVROS_PATH=""
-  RSYNC_CMD='-avPh -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude="build/**" --exclude="devel/**" --exclude="install/**" --exclude="driver/**'
+  RSYNC_CMD='-av -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude "build/" --exclude "devel/" --exclude "install/" --exclude "driver/" --exclude "src/mavros/" --exclude "src/mavlink/"'
   WS_EXTENSION="/opt/ros/${ROS_DISTRO}"
 
   if [ "${SEPERATE_MAVROS}" = true ]; then
-    MAVROS_PATH="${HOME}/macros_cws"
-    RSYNC_CMD='-avPh -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude="build/**" --exclude="devel/**" --exclude="install/**" --exclude="driver/** --exclude="src/mavros" --exclude="src/mavlink"'
+    MAVROS_PATH="${HOME}/mavros_cws"
+    RSYNC_CMD='-av -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude "build/" --exclude "devel/" --exclude "install/" --exclude "driver/" --exclude "src/mavros/" --exclude "src/mavlink/"'
     WS_EXTENSION="${MAVROS_PATH}/devel/"
 
     # copy mavros source
-    mkdir -p "${HOME}/mavros_cws/src"
-    rsync -avPh -c /opt/ros_ws/flightstack_cws/src/mav* "${HOME}/mavros_cws/src/"
+    mkdir -p "${MAVROS_PATH}/src"
+    rsync -av -c /opt/ros_ws/flightstack_cws/src/mavros "${MAVROS_PATH}/src/"
+    rsync -av -c /opt/ros_ws/flightstack_cws/src/mavlink "${MAVROS_PATH}/src/"
   fi
 
   # copy flightstack workspace
-  copy workspace
   rsync ${RSYNC_CMD}
 
   # check for build
@@ -123,21 +119,26 @@ if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
     fi
   fi
 
+  ## CHANGING OWNERSHIP OF HOME
+  echo "Chowning mount for ${USER_ID}..."
+  chown -R ${USER_ID}:${USER_ID} /home/${USER_ID}
 
   # build workspaces
   if [ "${AUTOBUILD}" = true ]; then
     if [ "${SEPERATE_MAVROS}" = true ]; then
-      sudo -u ${USER_ID} bash <<EOF
+      # sudo -u ${USER_ID} bash <<EOF
+      bash <<EOF
         source /opt/ros/${ROS_DISTRO}/setup.bash
         mkdir -p ${MAVROS_PATH}/src
-        cd ${HOME}/${MAVROS_PATH}
+        cd ${MAVROS_PATH}
         catkin init
         catkin config --extend /opt/ros/${ROS_DISTRO}
         catkin config -j2 -l2 --env-cache --cmake-args -DCMAKE_BUILD_TYPE=Release
         catkin build
 EOF
     fi
-    sudo -u ${USER_ID} bash <<EOF
+    # sudo -u ${USER_ID} bash <<EOF
+    bash <<EOF
       source /opt/ros/${ROS_DISTRO}/setup.bash
       mkdir -p ${HOME}/${WS_OUT_NAME}/src
       cd ${HOME}/${WS_OUT_NAME}
@@ -150,16 +151,18 @@ EOF
 EOF
   else
     if [ "${SEPERATE_MAVROS}" = true ]; then
-      sudo -u ${USER_ID} bash <<EOF
+      # sudo -u ${USER_ID} bash <<EOF
+      bash <<EOF
         source /opt/ros/${ROS_DISTRO}/setup.bash
         mkdir -p ${MAVROS_PATH}/src
-        cd ${HOME}/${MAVROS_PATH}
+        cd ${MAVROS_PATH}
         catkin init
         catkin config --extend /opt/ros/${ROS_DISTRO}
         catkin config -j2 -l2 --env-cache --cmake-args -DCMAKE_BUILD_TYPE=Release
 EOF
     fi
-    sudo -u ${USER_ID} bash <<EOF
+    # sudo -u ${USER_ID} bash <<EOF
+    bash <<EOF
       source /opt/ros/${ROS_DISTRO}/setup.bash
       mkdir -p ${HOME}/${WS_OUT_NAME}/src
       cd ${HOME}/${WS_OUT_NAME}
@@ -168,6 +171,11 @@ EOF
       catkin config -j2 -l2 --env-cache --cmake-args -DCMAKE_BUILD_TYPE=Release
       sed -i 's\source ~/catkin_ws/devel/setup.bash\source ~/${WS_OUT_NAME}/devel/setup.bash\g' ${HOME}/.ros_env.bash
 EOF
+
   fi
 
 fi
+
+## CHANGING OWNERSHIP OF HOME
+echo "Chowning mount for ${USER_ID}..."
+chown -R ${USER_ID}:${USER_ID} /home/${USER_ID}
