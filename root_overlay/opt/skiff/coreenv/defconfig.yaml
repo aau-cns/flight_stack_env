@@ -1,13 +1,9 @@
 containers:
   core:
     startAfterCreate: true
-    image: mascheiber/flightstack:arm64_bionic
+    image: gitlab.aau.at:5050/mascheiber/flightstack
     tty: true
     restartPolicy: "always"
-    # If this is commented, then the container will use the DNS info from root on container start
-    #dns:
-    #  - "8.8.8.8"
-    #  - "8.8.4.4"
     disableInit: true
     workingDirectory: /home/core
     mounts:
@@ -35,10 +31,10 @@ users:
     auth:
       copyRootKeys: true
 images:
-  mascheiber/flightstack:arm64_bionic:
-    # pull:
-    #   policy: ifnotexists
-    #   registry:
+  gitlab.aau.at:5050/mascheiber/flightstack:
+    pull:
+      policy: ifnotexists
+      registry: gitlab.aau.at:5050
     build:
       source: /mnt/rootfs/coreenv/flightstack
       squash: true

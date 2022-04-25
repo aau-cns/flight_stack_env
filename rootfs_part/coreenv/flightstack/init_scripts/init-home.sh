@@ -93,12 +93,12 @@ if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
 
   # setup commands
   MAVROS_PATH=""
-  RSYNC_CMD='-av -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude "build/" --exclude "devel/" --exclude "install/" --exclude "driver/" --exclude "src/mavros/" --exclude "src/mavlink/"'
+  RSYNC_CMD='-av -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude build/ --exclude devel/ --exclude install/ --exclude driver/'
   WS_EXTENSION="/opt/ros/${ROS_DISTRO}"
 
   if [ "${SEPERATE_MAVROS}" = true ]; then
     MAVROS_PATH="${HOME}/mavros_cws"
-    RSYNC_CMD='-av -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude "build/" --exclude "devel/" --exclude "install/" --exclude "driver/" --exclude "src/mavros/" --exclude "src/mavlink/"'
+    RSYNC_CMD='-av -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude build/ --exclude devel/ --exclude install/ --exclude driver/ --exclude src/mavros/ --exclude src/mavlink/'
     WS_EXTENSION="${MAVROS_PATH}/devel/"
 
     # copy mavros source
