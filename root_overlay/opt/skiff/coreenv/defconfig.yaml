@@ -3,7 +3,13 @@ containers:
     startAfterCreate: true
     image: aau-cns-docker/docker_registry/flightstack:latest
     entrypoint: ["/lib/systemd/systemd"]
-    env: ["container=docker"]
+    #env: ["container=docker"]
+    env:
+      - "container=docker"
+      - "LANG=en_US.UTF-8"
+      - "LANGUAGE=en_US:en"
+      - "LC_ALL=en_US.UTF-8"
+      - "ROS_DISTRO=melodic"
     stopSignal: RTMIN+3
     tty: true
     restartPolicy: "always"
