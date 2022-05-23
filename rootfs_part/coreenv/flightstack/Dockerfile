@@ -238,7 +238,8 @@ RUN apt-get update && apt-get install -y \
 ## Use this repo for non-ARM
 #RUN add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
 ## Use this repo for ARM
-RUN add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"
+# RUN add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"
+RUN if [ $(uname -i) = "x86_64" ]; then add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"; else add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"; fi
 
 ## other dependencies
 RUN apt-get update && apt-get install -y \

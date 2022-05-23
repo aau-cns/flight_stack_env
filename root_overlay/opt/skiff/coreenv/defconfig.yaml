@@ -1,7 +1,10 @@
 containers:
   core:
     startAfterCreate: true
-    image: gitlab.aau.at:5050/mascheiber/flightstack
+    image: aau-cns-docker/docker_registry/flightstack:latest
+    entrypoint: ["/lib/systemd/systemd"]
+    env: ["container=docker"]
+    stopSignal: RTMIN+3
     tty: true
     restartPolicy: "always"
     disableInit: true
@@ -14,6 +17,7 @@ containers:
       - /run/udev:/run/udev
       - /mnt/persist/core:/home/core
       - /etc/resolv.conf:/etc/resolv.conf:ro
+      - /etc/hostname:/etc/hostname:ro
     privileged: true
     capAdd:
       - ALL
@@ -31,8 +35,10 @@ users:
     auth:
       copyRootKeys: true
 images:
-  gitlab.aau.at:5050/mascheiber/flightstack:
+  aau-cns-docker/docker_registry/flightstack:latest:
     pull:
+      # images are provided for arm64, arm, amd64
+      # also an option: policy: ifbuildfails
       policy: ifnotexists
       registry: gitlab.aau.at:5050
     build:
