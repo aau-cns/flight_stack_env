@@ -1,34 +1,33 @@
-# CNS Flightstack: SkiffOS Environment
+# CNS Flight Stack: SkiffOS Environment
 
-[![License](https://img.shields.io/badge/License-AAUCNS-green.svg)](./LICENSE)
 
-## Before the first boot
+[![License](https://img.shields.io/badge/License-AAUCNS-informational.svg)](https://github.com/aau-cns/flight_stack_env/blob/main/LICENSE)
 
-To enable the i2c interface on the PI, add the following two lines to '/boot/config.txt'
 
-```
-# Enable GPIO features
-dtparam=i2c1=true
-dtparam=i2c_arm=on
-dtparam=i2c_arm_baudrate=400000
-dtparam=spi=on
+## Usage
 
-max_usb_current=1
+Create a folder called `env` for all your additional configs
+
+```bash
+mkdir -p skiff_configs/env
+cd skiff_configs/env
+git pull https://github.com/aau-cns/flight_stack_env.git flight_stack
 ```
 
-```
-modprobe i2c-bcm2708
-modprobe i2c_dev
+This can be used as part of [SkiffOS](https://github.com/skiffos/skiffos) as an config. Before compiling skiffos add this directory to the `SKIFF_EXTRA_CONFIGS_PATH`
+
+```bash
+cd skiff_configs/env
+export SKIFF_EXTRA_CONFIGS_PATH=${PWD}
+cd <path_to_skiffos>
+make # this will print now a config called env/flight_stack
 ```
 
-```
-apt-get install i2c-tools
-i2cdetect -y 1
-```
+If you then go into skiffos and perform a `make` this configuration should show up in the list.
 
-https://github.com/garmin/LIDARLite_RaspberryPi_Library/
+## Pull the Skiff Flight Stack image from a docker registry
 
-## Pull the Skiff AMADEE image from a docker registry
+Optionally you can also pull a pre-compiled docker container for the flight stack inside your skiff root system. This however, will then not include additional packages required in the root system (e.g., for USB devices).
 
 1. Stop the skiff core service
 
@@ -41,47 +40,22 @@ systemctl stop skiff-core
 ```sh
 docker rmi core
 ```
-3. Login for dockerhub (it could be that this command needs to be run 3-6 times till the command is successfull)
+
+3. Pull the image
 
 ```sh
-docker login --username christianbrommer --password <password>
+docker pull gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack:latest
 ```
-4. Pull the image
+4. Rename the image
 
 ```sh
-docker pull christianbrommer/amadee:latest
-```
-5. Rename the image
-
-```sh
-docker tag amadee skiff/core-ubuntu-basic:latest
+docker tag \
+  gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack \
+  aau-cns-docker/docker_registry/flight_stack:latest
 ```
 
-6. Restart the skiff-core service
+5. Restart the skiff-core service
 
 ```sh
 systemctl start skiff-core
 ```
-
-## Raspberry setup
-
-USB power setting: By default the max current that can be drawn by the USB ports is 600mA. If the current drawn from the ports reaches over this limit, the USB is shutdown. By adding the following setting to /boot/config.txt the current for the USB ports can be increased to 1.2A
-```
-max_usb_current=1
-```
-
-## USB Media auto mount
-Drives with the lable "amadee_drive" are automatically mounted to /amadee_data. Data is also accessable trough the symlinc "~/rec_media" in the home directory.
-
-
-# USB symlink for GPS
-
-Reload rules: udevadm control --reload-rules
-
-Further information: https://askubuntu.com/questions/698990/distinguishing-between-two-similar-usb-devices
-
-# Known issues
-
-- Overloading /etc/modules in the host system does not work. But /etc/modules can be used inside the core environment all modules are available in there.
-
-..

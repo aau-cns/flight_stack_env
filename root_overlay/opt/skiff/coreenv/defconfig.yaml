@@ -1,9 +1,8 @@
 containers:
   core:
     startAfterCreate: true
-    image: aau-cns-docker/docker_registry/flightstack:latest
+    image: aau-cns-docker/docker_registry/flight_stack:latest
     entrypoint: ["/lib/systemd/systemd"]
-    #env: ["container=docker"]
     env:
       - "container=docker"
       - "LANG=en_US.UTF-8"
@@ -41,7 +40,7 @@ users:
     auth:
       copyRootKeys: true
 images:
-  aau-cns-docker/docker_registry/flightstack:latest:
+  aau-cns-docker/docker_registry/flight_stack:latest:
     pull:
       # images are provided for arm64, arm, amd64
       # also an option: policy: ifbuildfails

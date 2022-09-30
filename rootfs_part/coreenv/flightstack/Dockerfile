@@ -2,12 +2,12 @@
 ## Compile with number of cores-1 to prevent overload
 ## RUN make -j`nproc --ignore=1`
 
-FROM ubuntu:bionic
+FROM ubuntu:focal
 
 LABEL author="Christian Brommer <christian.brommer@aau.at>"
 LABEL maintainer="Christian Brommer <christian.brommer@aau.at>"
 LABEL maintainer="Martin Scheiber <martin.scheiber@aau.at>"
-LABEL description="CNS Flightstack Environment"
+LABEL description="CNS Flight Stack Environment"
 
 # setup environment
 ENV LANG C.UTF-8
@@ -112,11 +112,8 @@ RUN systemctl set-default multi-user.target && \
          -exec rm \{} \;
 
 # Flightstack Setup
-COPY ./init_scripts/ /opt/skiff-core/scripts/
 
-# workspace and home directory scripts
-# TODO(scm): this part can be setup from public git repo once available
-COPY ./flightstack_cws/src /opt/ros_ws/flightstack_cws/src
+# home directory scripts
 COPY ./home /opt/flightstack/home
 
 # system configuration
@@ -124,6 +121,10 @@ COPY ./etc/fstab /etc/fstab
 COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
 COPY ./udev/rules.d/90-i2c.rules /etc/udev/rules.d/
 COPY ./udev/rules.d/90-tty.rules /etc/udev/rules.d/
+
+# create workspace in root
+WORKDIR /opt/ros_cws/
+RUN git clone https://github.com/aau-cns/flight_stack
 
 
 # General
@@ -153,7 +154,6 @@ RUN apt-get update && \
 RUN apt-get update && \
  apt-get dist-upgrade -y && \
  apt-get install -y \
- python-pip \
  python3-pip && \
  apt-get autoremove -y && \
  rm -rf /var/lib/apt/lists/*
@@ -175,9 +175,9 @@ RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc
 
 ## install bootstrap tools
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    python-rosdep \
-    python-rosinstall \
-    python-vcstools \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-vcstools \
     && rm -rf /var/lib/apt/lists/*
 
 ## bootstrap rosdep
@@ -187,23 +187,23 @@ RUN rosdep init \
 ## install ros packages
 ENV ROS_DISTRO melodic
 RUN apt-get update && apt-get install -y \
-    ros-melodic-ros-base=1.4.1-0* \
+    ros-noetic-ros-base=1.5.0-1* \
     && rm -rf /var/lib/apt/lists/*
 
 ## catkin build
 RUN apt-get update && apt-get install -y \
-    python-catkin-tools \
+    python3-catkin-tools \
     && rm -rf /var/lib/apt/lists/*
 
 ## Packages for mav ros
 RUN apt-get update && apt-get install -y \
-    ros-melodic-mavros \
-    ros-melodic-mavros-extras \
-    ros-melodic-geometry-msgs \
-    ros-melodic-sensor-msgs \
-    ros-melodic-std-msgs \
-    ros-melodic-angles \
-    ros-melodic-control-toolbox \
+    ros-noetic-mavros \
+    ros-noetic-mavros-extras \
+    ros-noetic-geometry-msgs \
+    ros-noetic-sensor-msgs \
+    ros-noetic-std-msgs \
+    ros-noetic-angles \
+    ros-noetic-control-toolbox \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/flightstack
@@ -223,16 +223,16 @@ RUN apt-get update && apt-get install -y \
 ## RealSense installation
 ### Ros packages for realsense t265 ROS
 RUN apt-get update && apt-get install -y \
-    ros-melodic-cv-bridge \
-    ros-melodic-image-transport \
-    ros-melodic-ddynamic-reconfigure \
+    ros-noetic-cv-bridge \
+    ros-noetic-image-transport \
+    ros-noetic-ddynamic-reconfigure \
     && rm -rf /var/lib/apt/lists/*
 
 
 # MavLink build components
 RUN apt-get update && apt-get install -y \
-    python-rosinstall-generator \
-    python-future python-lxml \
+    python3-rosinstall-generator \
+    python3-future python-lxml \
     && rm -rf /var/lib/apt/lists/*
 
 ## Use this repo for non-ARM
