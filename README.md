@@ -10,7 +10,7 @@ Create a folder called `env` for all your additional configs
 
 ```bash
 mkdir -p skiff_configs/ && cd skiff_configs/
-git pull https://github.com/aau-cns/flight_stack_env.git flight_stack
+git pull https://github.com/aau-cns/flight_stack_env.git flightstack
 ```
 
 This can be used as part of [SkiffOS](https://github.com/skiffos/skiffos) as an config. Before compiling skiffos add this directory to the `SKIFF_EXTRA_CONFIGS_PATH`
