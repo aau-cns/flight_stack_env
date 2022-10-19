@@ -9,18 +9,17 @@
 Create a folder called `env` for all your additional configs
 
 ```bash
-mkdir -p skiff_configs/env
-cd skiff_configs/env
+mkdir -p skiff_configs/ && cd skiff_configs/
 git pull https://github.com/aau-cns/flight_stack_env.git flight_stack
 ```
 
 This can be used as part of [SkiffOS](https://github.com/skiffos/skiffos) as an config. Before compiling skiffos add this directory to the `SKIFF_EXTRA_CONFIGS_PATH`
 
 ```bash
-cd skiff_configs/env
+cd skiff_configs/
 export SKIFF_EXTRA_CONFIGS_PATH=${PWD}
 cd <path_to_skiffos>
-make # this will print now a config called env/flight_stack
+make # this will print now a config called flight_stack/full and flight_stack/virtual
 ```
 
 If you then go into skiffos and perform a `make` this configuration should show up in the list.
