@@ -8,7 +8,7 @@ containers:
       - "LANG=en_US.UTF-8"
       - "LANGUAGE=en_US:en"
       - "LC_ALL=en_US.UTF-8"
-      - "ROS_DISTRO=melodic"
+      - "ROS_DISTRO=noetic"
     stopSignal: RTMIN+3
     tty: true
     restartPolicy: "always"

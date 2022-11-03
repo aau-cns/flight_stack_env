@@ -16,7 +16,7 @@
 
 # setup default values
 USER_ID=core
-WS_IN_NAME=flightstack_cws
+WS_IN_NAME=ros_cws/cns_flightstack_cws
 WS_OUT_NAME=catkin_ws
 SEPERATE_MAVROS=false
 AUTOBUILD=false
@@ -30,7 +30,7 @@ function print_usage {
   echo "    -u [USER]   user to create the home directory for"
   echo "                default: core"
   echo "    -i [CWS]    workspace to copy from /opt"
-  echo "                default: flightstack_cws"
+  echo "                default: ros_cws/cns_flightstack_cws"
   echo "    -o [CWS]    workspace to copy to"
   echo "                default: catkin_ws"
   echo "    -h          print this help"
@@ -93,7 +93,7 @@ if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
 
   # setup commands
   MAVROS_PATH=""
-  RSYNC_CMD='-av -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude build/ --exclude devel/ --exclude install/ --exclude driver/'
+  RSYNC_CMD='-av -c /opt/'${WS_IN_NAME}'/ '${HOME}/${WS_OUT_NAME}/' --exclude build/ --exclude devel/ --exclude install/ --exclude driver/'
   WS_EXTENSION="/opt/ros/${ROS_DISTRO}"
 
   if [ "${SEPERATE_MAVROS}" = true ]; then
@@ -103,8 +103,8 @@ if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
 
     # copy mavros source
     mkdir -p "${MAVROS_PATH}/src"
-    rsync -av -c /opt/ros_ws/flightstack_cws/src/mavros "${MAVROS_PATH}/src/"
-    rsync -av -c /opt/ros_ws/flightstack_cws/src/mavlink "${MAVROS_PATH}/src/"
+    rsync -av -c /opt/ros_cws/cns_flightstack_cws/src/mavros "${MAVROS_PATH}/src/"
+    rsync -av -c /opt/ros_cws/cns_flightstack_cws/src/mavlink "${MAVROS_PATH}/src/"
   fi
 
   # copy flightstack workspace

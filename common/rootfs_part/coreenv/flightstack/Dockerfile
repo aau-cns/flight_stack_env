@@ -14,6 +14,9 @@ ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV TERM xterm
 ENV container docker
+# workaround according to https://bugs.launchpad.net/cloud-images/+bug/1910119
+ENV PATH="/usr/bin:${PATH}"
+# see also https://github.com/docker/buildx/issues/495
 
 # Setup timezone
 RUN echo 'Etc/UTC' > /etc/timezone && \
@@ -115,6 +118,7 @@ RUN systemctl set-default multi-user.target && \
 
 # home directory scripts
 COPY ./home /opt/flightstack/home
+COPY ./init_scripts /opt/flightstack/init
 
 # system configuration
 COPY ./etc/fstab /etc/fstab
@@ -124,7 +128,9 @@ COPY ./udev/rules.d/90-tty.rules /etc/udev/rules.d/
 
 # create workspace in root
 WORKDIR /opt/ros_cws/
-RUN git clone https://github.com/aau-cns/flight_stack
+RUN git clone https://github.com/aau-cns/flight_stack cns_flightstack_cws
+WORKDIR /opt/ros_cws/cns_flightstack_cws/
+RUN git submodule update --init --recursive
 
 
 # General
