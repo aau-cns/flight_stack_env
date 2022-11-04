@@ -118,8 +118,8 @@ RUN systemctl set-default multi-user.target && \
 # Flightstack Setup
 
 # home directory scripts
-COPY ./home /opt/flightstack/home
-COPY ./init_scripts /opt/flightstack/init
+COPY ./home /opt/skiff-core/home
+COPY ./init_scripts /opt/skiff-core/init
 
 # system configuration
 COPY ./etc/fstab /etc/fstab
