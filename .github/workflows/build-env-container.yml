@@ -34,22 +34,22 @@ jobs:
 
       - name: Login to Registry
         env:
-          DOCKER_USER: ${{secrets.REGISTRY_USER}}
-          DOCKER_PASSWORD: ${{secrets.REGISTRY_PASSWORD}}
-          DOCKER_URL: ${{secrets.REGISTRY_URL}}
+          DOCKER_USER: ${{secrets.GITLAB_REGISTRY_USER}}
+          DOCKER_PASSWORD: ${{secrets.GITLAB_REGISTRY_PASSWORD}}
+          DOCKER_URL: ${{secrets.GITLAB_REGISTRY_URL}}
         run: |
           docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_URL}
 
       - name: Build Docker Image (latest)
         if: ${{ github.ref_name == 'main' }}
         env:
-          IMAGE_URL: ${{secrets.REGISTRY_IMAGE_URL}}
+          IMAGE_URL: ${{secrets.GITLAB_REGISTRY_IMAGE_URL}}
         run: >
              docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 --tag ${IMAGE_URL}/flight_stack:latest --compress --squash --force-rm --push ./common/rootfs_part/coreenv/flightstack/
 
       - name: Build Docker Image (dev)
         if: ${{ github.ref_name == 'develop' }}
         env:
-          IMAGE_URL: ${{secrets.REGISTRY_IMAGE_URL}}
+          IMAGE_URL: ${{secrets.GITLAB_REGISTRY_IMAGE_URL}}
         run: >
              docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7 --tag ${IMAGE_URL}/flight_stack:dev --compress --squash --force-rm --push ./common/rootfs_part/coreenv/flightstack/

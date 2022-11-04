@@ -80,7 +80,7 @@ if [ ! -f /home/${USER_ID}/.user_initated ]; then
   rsync -rhv \
     --ignore-existing  \
     /opt/flightstack/home/ /home/${USER_ID}/
-  echo "# source /home/${USER_ID}/.ros_env.bash" >> ${HOME}/.bashrc
+  echo "source /home/${USER_ID}/.ros_env.bash" >> ${HOME}/.bashrc
 
   touch /home/${USER_ID}/.user_initated
 else
@@ -98,13 +98,13 @@ if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
 
   if [ "${SEPERATE_MAVROS}" = true ]; then
     MAVROS_PATH="${HOME}/mavros_cws"
-    RSYNC_CMD='-av -c /opt/ros_ws/flightstack_cws/ '${HOME}/${WS_OUT_NAME}/' --exclude build/ --exclude devel/ --exclude install/ --exclude driver/ --exclude src/mavros/ --exclude src/mavlink/'
+    RSYNC_CMD='-av -c /opt/'${WS_IN_NAME}'/ '${HOME}/${WS_OUT_NAME}/' --exclude build/ --exclude devel/ --exclude install/ --exclude driver/ --exclude src/mavros/ --exclude src/mavlink/'
     WS_EXTENSION="${MAVROS_PATH}/devel/"
 
     # copy mavros source
     mkdir -p "${MAVROS_PATH}/src"
-    rsync -av -c /opt/ros_cws/cns_flightstack_cws/src/mavros "${MAVROS_PATH}/src/"
-    rsync -av -c /opt/ros_cws/cns_flightstack_cws/src/mavlink "${MAVROS_PATH}/src/"
+    rsync -av -c /opt/${WS_IN_NAME}/src/mavros "${MAVROS_PATH}/src/"
+    rsync -av -c /opt/${WS_IN_NAME}/src/mavlink "${MAVROS_PATH}/src/"
   fi
 
   # copy flightstack workspace
