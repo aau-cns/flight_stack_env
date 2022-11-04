@@ -14,6 +14,7 @@ ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV TERM xterm
 ENV container docker
+ENV ROS_DISTRO noetic
 # workaround according to https://bugs.launchpad.net/cloud-images/+bug/1910119
 ENV PATH="/usr/bin:${PATH}"
 # see also https://github.com/docker/buildx/issues/495
@@ -191,9 +192,8 @@ RUN rosdep init \
     && rosdep update
 
 ## install ros packages
-ENV ROS_DISTRO melodic
 RUN apt-get update && apt-get install -y \
-    ros-noetic-ros-base=1.5.0-1* \
+    ros-${ROS_DISTRO}-ros-base=1.5.0-1* \
     && rm -rf /var/lib/apt/lists/*
 
 ## catkin build
@@ -203,13 +203,13 @@ RUN apt-get update && apt-get install -y \
 
 ## Packages for mav ros
 RUN apt-get update && apt-get install -y \
-    ros-noetic-mavros \
-    ros-noetic-mavros-extras \
-    ros-noetic-geometry-msgs \
-    ros-noetic-sensor-msgs \
-    ros-noetic-std-msgs \
-    ros-noetic-angles \
-    ros-noetic-control-toolbox \
+    ros-${ROS_DISTRO}-mavros \
+    ros-${ROS_DISTRO}-mavros-extras \
+    ros-${ROS_DISTRO}-geometry-msgs \
+    ros-${ROS_DISTRO}-sensor-msgs \
+    ros-${ROS_DISTRO}-std-msgs \
+    ros-${ROS_DISTRO}-angles \
+    ros-${ROS_DISTRO}-control-toolbox \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/flightstack
@@ -229,9 +229,9 @@ RUN apt-get update && apt-get install -y \
 ## RealSense installation
 ### Ros packages for realsense t265 ROS
 RUN apt-get update && apt-get install -y \
-    ros-noetic-cv-bridge \
-    ros-noetic-image-transport \
-    ros-noetic-ddynamic-reconfigure \
+    ros-${ROS_DISTRO}-cv-bridge \
+    ros-${ROS_DISTRO}-image-transport \
+    ros-${ROS_DISTRO}-ddynamic-reconfigure \
     && rm -rf /var/lib/apt/lists/*
 
 
