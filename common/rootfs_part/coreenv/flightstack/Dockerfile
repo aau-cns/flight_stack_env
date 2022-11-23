@@ -1,23 +1,46 @@
-# General information
+# Copyright (C) 2020-2022  Christian Brommer, Martin scheiber,
+# and others, Control of Networked Systems, University of Klagenfurt, Austria.
+#
+# All rights reserved.
+#
+# This software is licensed under the terms of the BSD-2-Clause-License with
+# no commercial use allowed, the full terms of which are made available
+# in the LICENSE file. No license in patents is granted.
+#
+# You can contact the authors at <christian.brommer@aau.at>
+# and <martin.scheiber@aau.at>.
+
 ## Compile with number of cores-1 to prevent overload
 ## RUN make -j`nproc --ignore=1`
 
-FROM ubuntu:focal
+ARG UNIX_BASE=ubuntu:focal
+FROM $UNIX_BASE
 
-LABEL author="Christian Brommer <christian.brommer@aau.at>"
-LABEL maintainer="Christian Brommer <christian.brommer@aau.at>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@aau.at>"
+# input arguments
+ARG VERSION
+ARG BUILD_TIMESTAMP
+ARG ROS_BUILD_DISTRO
+
+LABEL author="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
 LABEL description="CNS Flight Stack Environment"
 
-# setup environment
+# flightstack environment
+ENV FLIGHTSTACK_VERSION ${VERSION}
+ENV FLIGHTSTACK_BUILD_TIMESTAMP ${BUILD_TIMESTAMP}
+
+# general environment setup
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV TERM xterm
 ENV container docker
-ENV ROS_DISTRO noetic
 # workaround according to https://bugs.launchpad.net/cloud-images/+bug/1910119
 ENV PATH="/usr/bin:${PATH}"
 # see also https://github.com/docker/buildx/issues/495
+
+ENV ROS_DISTRO $ROS_BUILD_DISTRO
 
 # Setup timezone
 RUN echo 'Etc/UTC' > /etc/timezone && \

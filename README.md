@@ -120,6 +120,7 @@ docker buildx build \
   --build-arg VERSION="${GIT_VERSION}" \
   --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
   --build-arg ROS_BUILD_DISTRO="noetic" \
+  --build-arg UNIX_BASE="ubuntu:focal" \
   --compress --force-rm \
   ./common/rootfs_part/coreenv/flightstack/
   # --push if you want to commit
