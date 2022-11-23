@@ -112,10 +112,14 @@ Images are auto-built through the GitHub workflows. If you want to (cross-) comp
 ```bash
 export DOCKER_REGISTRY=gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack
 export GIT_VERSION=$(git log -1 --pretty=%h)
+export BUILD_TIMESTAMP=$( date '+%F-%H-%M-%S' )
 docker buildx build \
   --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
   --tag ${DOCKER_REGISTRY}:dev \
   --tag ${DOCKER_REGISTRY}:${GIT_VERSION} \
+  --build-arg VERSION="${GIT_VERSION}" \
+  --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
+  --build-arg ROS_BUILD_DISTRO="noetic" \
   --compress --force-rm \
   ./common/rootfs_part/coreenv/flightstack/
   # --push if you want to commit

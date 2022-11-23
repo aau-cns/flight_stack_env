@@ -49,3 +49,7 @@ images:
     build:
       source: /mnt/rootfs/coreenv/flightstack
       squash: true
+      buildArgs:
+        - ROS_BUILD_DISTRO: noetic
+        - VERSION: 1.0.0-beta1
+        - BUILD_TIMESTAMP: internal
