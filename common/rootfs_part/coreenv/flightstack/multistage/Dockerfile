@@ -2,16 +2,7 @@
 ## Compile with number of cores-1 to prevent overload
 ## RUN make -j`nproc --ignore=1`
 
-LABEL author="Christian Brommer <christian.brommer@aau.at>"
-LABEL maintainer="Christian Brommer <christian.brommer@aau.at>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@aau.at>"
-LABEL description="CNS Flight Stack Environment"
 
-# input arguments
-# from https://axellarsson.com/blog/tag-docker-image-with-git-commit-hash/
-ARG VERSION
-ARG BUILD_TIMESTAMP
-ARG ROS_BUILD_DISTRO
 
 # setup stage
 FROM ubuntu:focal AS gitbase
@@ -29,7 +20,7 @@ RUN git clone https://github.com/aau-cns/flight_stack cns_flightstack_cws \
     && cd cns_flightstack_cws \
     && git submodule update --init --recursive
 
-FROM githabse as build
+FROM gitbase as build
 RUN export DEBIAN_FRONTEND=noninteractive; \
   apt-get update && \
   apt-get install -y  \
@@ -40,11 +31,25 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /opt
 RUN git clone --branch v2.4.0 https://github.com/mvp/uhubctl \
-    && cd uhubctl && make -j`nproc --ignore=1` \
-RUN checkinstall --install=no --default \
+    && cd uhubctl && make -j`nproc --ignore=1` 
+WORKDIR /opt/uhubctl
+RUN checkinstall \
+      --install=no \
+      --default \
     && cp uhubctl_*.deb /uhubctl.deb
 
 FROM ubuntu:focal AS base
+# input arguments
+# from https://axellarsson.com/blog/tag-docker-image-with-git-commit-hash/
+ARG VERSION
+ARG BUILD_TIMESTAMP
+ARG ROS_BUILD_DISTRO
+
+LABEL author="Christian Brommer <christian.brommer@aau.at>"
+LABEL maintainer="Christian Brommer <christian.brommer@aau.at>"
+LABEL maintainer="Martin Scheiber <martin.scheiber@aau.at>"
+LABEL description="CNS Flight Stack Environment"
+
 # flightstack environment
 ENV FLIGHTSTACK_VERSION ${VERSION}
 ENV FLIGHTSTACK_BUILD_TIMESTAMP ${BUILD_TIMESTAMP}
@@ -58,8 +63,7 @@ ENV container docker
 ENV PATH="/usr/bin:${PATH}"
 # see also https://github.com/docker/buildx/issues/495
 
-ENV ROS_DISTRO ${ROS_BUILD_DISTRO}
-
+ENV ROS_DISTRO $ROS_BUILD_DISTRO
 
 # Setup timezone
 RUN echo 'Etc/UTC' > /etc/timezone && \
