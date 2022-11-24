@@ -16,12 +16,36 @@ on:
     branches: [ "main", "develop" ]
     paths:
       - 'common/rootfs_part/coreenv/flightstack/**'
+      - '.github/workflows/build-env-container.yml'
 
 jobs:
-  build_env_dev:
-    name: Build Test Container (${{ github.ref_name }})
+  build_container_latest:
+    name: Build Flightstack Container (${{ github.ref_name }})
+    if: ${{ github.ref_name == 'main' }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [noetic, melodic]
+        UNIX_BASE:
+          - ubuntu:bionic
+          - ubuntu:focal
+        include:
+          - UNIX_BASE: ubuntu:bionic
+            UNIX_SHORT: ubionic
+          - UNIX_BASE: ubuntu:focal
+            UNIX_SHORT: ufocal
+    env:
+      IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
+      IMAGE_NAME: flight_stack
+      COMMIT_HASH: ${{ github.sha }}
+      LATEST_ROS: noetic
+      LATEST_UNIX: ubuntu:focal
     steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date '+%F-%H-%M-%S')"
+
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -41,15 +65,79 @@ jobs:
           docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_URL}
 
       - name: Build Docker Image (latest)
-        if: ${{ github.ref_name == 'main' }}
+        if: ${{ matrix.ROS_DISTRO == env.LATEST_ROS && matrix.UNIX_BASE == env.LATEST_UNIX }}
         env:
-          IMAGE_URL: ${{secrets.GITLAB_REGISTRY_IMAGE_URL}}
+          BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
-             docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 --tag ${IMAGE_URL}/flight_stack:latest --compress --squash --force-rm --push ./common/rootfs_part/coreenv/flightstack/
+             docker buildx build \
+               --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:latest \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${COMMIT_HASH::6} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${UNIX_SHORT}_${ROS_DISTRO} \
+               --build-arg VERSION="${GIT_VERSION}" \
+               --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
+               --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \
+               --build-arg UNIX_BASE="${{ matrix.UNIX_BASE }}" \
+               --compress --force-rm --push \
+               ./common/rootfs_part/coreenv/flightstack/
+
+      - name: Build Docker Image (${{ matrix.UNIX_BASE }} with ROS-${{ matrix.ROS_DISTRO }})
+        if: ${{ matrix.ROS_DISTRO != env.LATEST_ROS || matrix.UNIX_BASE != env.LATEST_UNIX }}
+        run: >
+             docker buildx build \
+               --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${UNIX_SHORT}_${ROS_DISTRO} \
+               --build-arg VERSION="${GIT_VERSION}" \
+               --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
+               --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \
+               --build-arg UNIX_BASE="${{ matrix.UNIX_BASE }}" \
+               --compress --force-rm --push \
+               ./common/rootfs_part/coreenv/flightstack/
+
+  build_container_dev:
+    name: Build Flightstack Dev Container (${{ github.ref_name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    env:
+      IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
+      IMAGE_NAME: flight_stack
+      COMMIT_HASH: ${{ github.sha }}
+      ROS_DISTRO: noetic
+      UNIX_BASE: ubuntu:focal
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date '+%F-%H-%M-%S')"
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Registry
+        env:
+          DOCKER_USER: ${{secrets.GITLAB_REGISTRY_USER}}
+          DOCKER_PASSWORD: ${{secrets.GITLAB_REGISTRY_PASSWORD}}
+          DOCKER_URL: ${{secrets.GITLAB_REGISTRY_URL}}
+        run: |
+          docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_URL}
 
       - name: Build Docker Image (dev)
         if: ${{ github.ref_name == 'develop' }}
-        env:
-          IMAGE_URL: ${{secrets.GITLAB_REGISTRY_IMAGE_URL}}
         run: >
-             docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7 --tag ${IMAGE_URL}/flight_stack:dev --compress --squash --force-rm --push ./common/rootfs_part/coreenv/flightstack/
+             docker buildx build \
+               --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:dev \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${COMMIT_HASH::6} \
+               --build-arg VERSION="${GIT_VERSION}" \
+               --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
+               --build-arg ROS_BUILD_DISTRO="${ROS_DISTRO}" \
+               --build-arg UNIX_BASE="${UNIX_BASE}" \
+               --compress --force-rm --push \
+               ./common/rootfs_part/coreenv/flightstack/
