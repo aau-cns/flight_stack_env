@@ -154,7 +154,7 @@ COPY ./udev/rules.d/90-tty.rules /etc/udev/rules.d/
 WORKDIR /opt/ros_cws/
 RUN git clone https://github.com/aau-cns/flight_stack cns_flightstack_cws
 WORKDIR /opt/ros_cws/cns_flightstack_cws/
-RUN git submodule update --init --recursive
+RUN git pull && git submodule update --init --recursive
 
 
 # General
