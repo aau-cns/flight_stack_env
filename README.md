@@ -15,7 +15,7 @@ corresponding paper and consult the `LICENSE` file for a detailed explanation.
 
 ```latex
 @article{cns_flightstack22,
-    title        = {Flight Stack for Reproducible and Customizable Autonomy Applications in Research and Industry},
+    title        = {CNS Flight Stack for Reproducible, Customizable, and Fully Autonomous Applications},
     author       = {Scheiber, Martin and Fornasier, Alessandro and Jung, Roland and Böhm, Christoph and Dhakate, Rohit and Stewart, Christian and Steinbrener, Jan and Weiss, Stephan and Brommer, Christian},
     journal      = {IEEE Robotics and Automation Letters},
     volume       = {7},
@@ -28,9 +28,18 @@ corresponding paper and consult the `LICENSE` file for a detailed explanation.
 ```
 
 
-## Usage
+## Setup
+### New SkiffOS Workspace
+We provide a fully setup SkiffOS workspace with [github.com/aau-cns/flight_stack_skiffos](https://github.com/aau-cns/flight_stack_skiffos). You can set this up as follows and then continue below with the [build instructions](#usage).
 
-Create a folder called `env` for all your additional configs
+```bash
+git clone https://github.com/aau-cns/flight_stack_skiffos.git
+cd flight_stack_skiffos
+./setup.sh
+```
+
+### Existing SkiffOS Workspace
+Add the flightstack environment to your additional SkiffOS configs
 
 ```bash
 mkdir -p skiff_configs/ && cd skiff_configs/
@@ -46,9 +55,10 @@ cd <path_to_skiffos>
 make # this will print now a config called flight_stack/full and flight_stack/virtual
 ```
 
-If you then go into skiffos and perform a `make` this configuration should show up in the list.
+If you then change directory to Skiffos and perform a `make` this configuration should show up in the list.
 
-#### Build Full
+## Usage
+### Build Full
 For embedded hardware use the full configuration of the flightstack environment
 
 ```bash
@@ -58,7 +68,7 @@ export SKIFF_CONFIG=pi/4,flightstack/full
 export SKIFF_CONFIG=odroid/xu,flightstack/full
 ```
 
-#### Build for Virtual Environments
+### Build for Virtual Environments
 For virtual environment such as the virtualbox or v86 use the virtual command from the flightstack
 
 ```bash
@@ -70,7 +80,7 @@ export SKIFF_CONFIG=browser/v86,flightstack/virtual
 
 ## Pull the Skiff Flight Stack image from a docker registry
 
-Optionally you can also pull a pre-compiled docker container for the flight stack inside your skiff root system. This however, will then not include additional packages required in the root system (e.g., for USB devices).
+Optionally you can also pull a pre-compiled docker container for the flight stack inside your skiff root system.
 
 1. Stop the skiff core service
 
@@ -112,7 +122,7 @@ Images are auto-built through the GitHub workflows. If you want to (cross-) comp
 ```bash
 export DOCKER_REGISTRY=gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack
 docker buildx build \
-  --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
+  --platform=linux/amd64,linux/arm64,linux/arm/v7 \
   --tag ${DOCKER_REGISTRY}:dev \
   --tag ${DOCKER_REGISTRY}:$(git log -1 --pretty=%h) \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
@@ -121,5 +131,5 @@ docker buildx build \
   --build-arg UNIX_BASE="ubuntu:focal" \
   --compress --force-rm \
   ./common/rootfs_part/coreenv/flightstack/
-  # --push if you want to commit
+  # --push #if you want to commit
 ```

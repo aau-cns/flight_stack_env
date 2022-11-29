@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2022  Christian Brommer, Martin scheiber,
+# Copyright (C) 2020-2022  Christian Brommer, Martin Scheiber,
 # and others, Control of Networked Systems, University of Klagenfurt, Austria.
 #
 # All rights reserved.
@@ -203,11 +203,23 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C1CF6E31E6
 ## setup sources.list
 RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
 
+## Use this repo for non-ARM
+#RUN add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
+## Use this repo for ARM
+# RUN add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"
+RUN if [ $(uname -i) = "x86_64" ]; then add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"; else add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"; fi
+
 ## install bootstrap tools
 RUN apt-get update && apt-get install --no-install-recommends -y \
     python3-rosdep \
     python3-rosinstall \
     python3-vcstools \
+    && rm -rf /var/lib/apt/lists/*
+
+# prepare for rosdep on arm
+RUN apt-get update && apt-get install ca-cacert && \
+    c_rehash /etc/ssl/certs && \
+    update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 ## bootstrap rosdep
@@ -246,9 +258,6 @@ RUN apt-get update && apt-get install -y \
     librosconsole-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Camera driver, ros and linux package installation
-# COPY ./amadee20_cws/driver /opt/amadee/driver
-
 ## RealSense installation
 ### Ros packages for realsense t265 ROS
 RUN apt-get update && apt-get install -y \
@@ -264,11 +273,6 @@ RUN apt-get update && apt-get install -y \
     python3-future python-lxml \
     && rm -rf /var/lib/apt/lists/*
 
-## Use this repo for non-ARM
-#RUN add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
-## Use this repo for ARM
-# RUN add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"
-RUN if [ $(uname -i) = "x86_64" ]; then add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"; else add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"; fi
 
 ## other dependencies
 RUN apt-get update && apt-get install -y \

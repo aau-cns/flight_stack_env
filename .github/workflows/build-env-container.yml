@@ -20,7 +20,7 @@ on:
 
 jobs:
   build_container_latest:
-    name: Build Flightstack Container (${{ github.ref_name }})
+    name: Build Flightstack Container (main - ${UNIX_SHORT}_${{ matrix.ROS_DISTRO }})
     if: ${{ github.ref_name == 'main' }}
     runs-on: ubuntu-latest
     strategy:
@@ -41,6 +41,8 @@ jobs:
       COMMIT_HASH: ${{ github.sha }}
       LATEST_ROS: noetic
       LATEST_UNIX: ubuntu:focal
+      PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+      GIT_VERSION: 1.0.0-beta1
     steps:
       - name: Get current date
         id: date
@@ -70,10 +72,10 @@ jobs:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
              docker buildx build \
-               --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
+               --platform=${PLATFORMS} \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:latest \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:${COMMIT_HASH::6} \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}:${UNIX_SHORT}_${ROS_DISTRO} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${UNIX_SHORT}_${{ matrix.ROS_DISTRO }} \
                --build-arg VERSION="${GIT_VERSION}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
                --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \
@@ -83,10 +85,12 @@ jobs:
 
       - name: Build Docker Image (${{ matrix.UNIX_BASE }} with ROS-${{ matrix.ROS_DISTRO }})
         if: ${{ matrix.ROS_DISTRO != env.LATEST_ROS || matrix.UNIX_BASE != env.LATEST_UNIX }}
+        env:
+          BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
              docker buildx build \
-               --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}:${UNIX_SHORT}_${ROS_DISTRO} \
+               --platform=${PLATFORMS} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${UNIX_SHORT}_${{ matrix.ROS_DISTRO }} \
                --build-arg VERSION="${GIT_VERSION}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
                --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \
@@ -96,6 +100,7 @@ jobs:
 
   build_container_dev:
     name: Build Flightstack Dev Container (${{ github.ref_name }})
+    if: ${{ github.ref_name != 'main' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -105,6 +110,7 @@ jobs:
       COMMIT_HASH: ${{ github.sha }}
       ROS_DISTRO: noetic
       UNIX_BASE: ubuntu:focal
+      PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
     steps:
       - name: Get current date
         id: date
@@ -114,11 +120,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v2.1.0
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v2.2.1
 
       - name: Login to Registry
         env:
@@ -129,13 +135,14 @@ jobs:
           docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_URL}
 
       - name: Build Docker Image (dev)
-        if: ${{ github.ref_name == 'develop' }}
+        env:
+          BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
              docker buildx build \
-               --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
+               --platform=${PLATFORMS} \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:dev \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:${COMMIT_HASH::6} \
-               --build-arg VERSION="${GIT_VERSION}" \
+               --build-arg VERSION="${COMMIT_HASH::6}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
                --build-arg ROS_BUILD_DISTRO="${ROS_DISTRO}" \
                --build-arg UNIX_BASE="${UNIX_BASE}" \

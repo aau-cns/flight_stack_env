@@ -90,6 +90,8 @@ fi
 ## COPY AND SETUP CATKIN WORKSPACE
 if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
   echo "Setting up ${WS_OUT_NAME} for ${USER_ID}..."
+  echo "Updating remote WS"
+  cd /opt/${WS_IN_NAME}/; git pull && git submodule update --recursive --init; cd -
 
   # setup commands
   MAVROS_PATH=""
