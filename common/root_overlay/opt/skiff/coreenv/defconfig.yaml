@@ -1,6 +1,5 @@
 containers:
   core:
-    startAfterCreate: true
     image: aau-cns-docker/docker_registry/flight_stack:latest
     entrypoint: ["/lib/systemd/systemd"]
     env:
@@ -11,19 +10,20 @@ containers:
       - "ROS_DISTRO=noetic"
     stopSignal: RTMIN+3
     tty: true
-    restartPolicy: "always"
     disableInit: true
     workingDirectory: /home/core
     mounts:
       - /dev:/dev
+      - /etc/hostname:/etc/hostname:ro
+      - /lib/modules:/lib/modules:ro
       - /sys:/sys
-      - /lib/modules:/lib/modules
       - /mnt:/mnt
       - /run/udev:/run/udev
-      - /mnt/persist/core:/home/core
       - /etc/resolv.conf:/etc/resolv.conf:ro
-      - /etc/hostname:/etc/hostname:ro
+      - /mnt/persist/core:/home/core
     privileged: true
+    startAfterCreate: true
+    restartPolicy: "always"
     capAdd:
       - ALL
     hostIPC: true

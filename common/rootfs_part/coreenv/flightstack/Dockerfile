@@ -106,30 +106,49 @@ ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
+# Create the user 'core' which will be the usual userspace account
+# Also allow core to run stuff as sudo without a password.
 RUN \
   adduser core \
   --no-create-home \
-  --gecos "Core User" \
+  --gecos "SkiffOS Core" \
   --shell /bin/bash \
   --disabled-password && \
+  adduser core audio && \
   adduser core sudo && \
   adduser core root && \
   adduser core systemd-journal && \
   adduser core dialout && \
   adduser core plugdev && \
   mkdir -p /home/core/ && \
-  chown core:core /home/core
+  chown core:core /home/core && \
+  passwd -d core && \
+  echo "core    ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+# RUN \
+#   adduser core \
+#   --no-create-home \
+#   --gecos "Core User" \
+#   --shell /bin/bash \
+#   --disabled-password && \
+#   adduser core sudo && \
+#   adduser core root && \
+#   adduser core systemd-journal && \
+#   adduser core dialout && \
+#   adduser core plugdev && \
+#   mkdir -p /home/core/ && \
+#   chown core:core /home/core
 
 RUN systemctl set-default multi-user.target && \
     systemctl mask tmp.mount && \
-    echo "core	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    (systemctl mask NetworkManager ModemManager wpa_supplicant) && \
     find /etc/systemd/system \
          /lib/systemd/system \
          \( -path '*.wants/*' \
          -name '*swapon*' \
          -or -name '*ntpd*' \
          -or -name '*resolved*' \
-         -or -name '*NetworkManager*' \
+         -or -name '*udev*' \
+         -or -name '*freedesktop*' \
          -or -name '*remount-fs*' \
          -or -name '*getty*' \
          -or -name '*systemd-sysctl*' \
@@ -137,6 +156,22 @@ RUN systemctl set-default multi-user.target && \
          -or -name '*remote-fs*' \) \
          -exec echo \{} \; \
          -exec rm \{} \;
+    # systemctl mask tmp.mount && \
+    # echo "core	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    # find /etc/systemd/system \
+    #      /lib/systemd/system \
+    #      \( -path '*.wants/*' \
+    #      -name '*swapon*' \
+    #      -or -name '*ntpd*' \
+    #      -or -name '*resolved*' \
+    #      -or -name '*NetworkManager*' \
+    #      -or -name '*remount-fs*' \
+    #      -or -name '*getty*' \
+    #      -or -name '*systemd-sysctl*' \
+    #      -or -name '*.mount' \
+    #      -or -name '*remote-fs*' \) \
+    #      -exec echo \{} \; \
+    #      -exec rm \{} \;
 
 # Flightstack Setup
 
