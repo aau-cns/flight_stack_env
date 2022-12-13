@@ -22,7 +22,7 @@ ARG BUILD_TIMESTAMP
 ARG ROS_BUILD_DISTRO
 
 LABEL author="Christian Brommer <christian.brommer@ieee.org>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL author="Martin Scheiber <martin.scheiber@ieee.org>"
 LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
 LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
 LABEL description="CNS Flight Stack Environment"
@@ -124,19 +124,6 @@ RUN \
   chown core:core /home/core && \
   passwd -d core && \
   echo "core    ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-# RUN \
-#   adduser core \
-#   --no-create-home \
-#   --gecos "Core User" \
-#   --shell /bin/bash \
-#   --disabled-password && \
-#   adduser core sudo && \
-#   adduser core root && \
-#   adduser core systemd-journal && \
-#   adduser core dialout && \
-#   adduser core plugdev && \
-#   mkdir -p /home/core/ && \
-#   chown core:core /home/core
 
 RUN systemctl set-default multi-user.target && \
     systemctl mask tmp.mount && \
@@ -156,22 +143,6 @@ RUN systemctl set-default multi-user.target && \
          -or -name '*remote-fs*' \) \
          -exec echo \{} \; \
          -exec rm \{} \;
-    # systemctl mask tmp.mount && \
-    # echo "core	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-    # find /etc/systemd/system \
-    #      /lib/systemd/system \
-    #      \( -path '*.wants/*' \
-    #      -name '*swapon*' \
-    #      -or -name '*ntpd*' \
-    #      -or -name '*resolved*' \
-    #      -or -name '*NetworkManager*' \
-    #      -or -name '*remount-fs*' \
-    #      -or -name '*getty*' \
-    #      -or -name '*systemd-sysctl*' \
-    #      -or -name '*.mount' \
-    #      -or -name '*remote-fs*' \) \
-    #      -exec echo \{} \; \
-    #      -exec rm \{} \;
 
 # Flightstack Setup
 

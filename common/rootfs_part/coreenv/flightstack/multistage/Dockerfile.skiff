@@ -1,0 +1,68 @@
+# General information
+## Compile with number of cores-1 to prevent overload
+## RUN make -j`nproc --ignore=1`
+
+
+
+# setup stage
+ARG FS_TAG=latest
+FROM gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack_base:${FS_TAG} AS base
+LABEL author="Christian Brommer <christian.brommer@ieee.org>"
+LABEL author="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL description="CNS Flight Stack Environment for SkiffOS"
+
+RUN \
+  adduser core \
+  --no-create-home \
+  --gecos "Core User" \
+  --shell /bin/bash \
+  --disabled-password && \
+  adduser core sudo && \
+  adduser core root && \
+  adduser core systemd-journal && \
+  adduser core dialout && \
+  adduser core plugdev && \
+  mkdir -p /home/core/ && \
+  chown core:core /home/core
+
+RUN \
+  adduser flightstack \
+  --no-create-home \
+  --gecos "Flightstack User" \
+  --shell /bin/bash \
+  --disabled-password && \
+  adduser flightstack sudo && \
+  adduser flightstack root && \
+  adduser flightstack systemd-journal && \
+  adduser flightstack dialout && \
+  adduser flightstack plugdev && \
+  mkdir -p /home/flightstack/ && \
+  chown flightstack:flightstack /home/flightstack
+
+# mask conflicting services
+RUN systemctl set-default multi-user.target && \
+    systemctl mask tmp.mount && \
+    (systemctl mask NetworkManager ModemManager wpa_supplicant) && \
+    find /etc/systemd/system \
+        /lib/systemd/system \
+        \( -path '*.wants/*' \
+        -name '*swapon*' \
+        -or -name '*ntpd*' \
+        -or -name '*resolved*' \
+        -or -name '*udev*' \
+        -or -name '*freedesktop*' \
+        -or -name '*remount-fs*' \
+        -or -name '*getty*' \
+        -or -name '*systemd-sysctl*' \
+        -or -name '*.mount' \
+        -or -name '*remote-fs*' \) \
+        -exec echo \{} \; \
+        -exec rm \{} \;
+
+# Mask unneeded service to prevent it from failing
+RUN systemctl mask kmod-static-nodes
+
+WORKDIR /home/core
+ENTRYPOINT ["/lib/systemd/systemd"]
