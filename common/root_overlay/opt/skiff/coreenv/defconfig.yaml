@@ -1,5 +1,5 @@
 containers:
-  core:
+  flightstack:
     image: aau-cns-docker/docker_registry/flight_stack:latest
     entrypoint: ["/lib/systemd/systemd"]
     env:
@@ -11,7 +11,7 @@ containers:
     stopSignal: RTMIN+3
     tty: true
     disableInit: true
-    workingDirectory: /home/core
+    workingDirectory: /home/flightstack
     mounts:
       - /dev:/dev
       - /etc/hostname:/etc/hostname:ro
@@ -20,6 +20,7 @@ containers:
       - /mnt:/mnt
       - /run/udev:/run/udev
       - /etc/resolv.conf:/etc/resolv.conf:ro
+      - /mnt/persist/flightstack:/home/flightstack
       - /mnt/persist/core:/home/core
     privileged: true
     startAfterCreate: true
@@ -33,8 +34,15 @@ containers:
       - seccomp=unconfined
 users:
   core:
-    container: core
+    container: flightstack
     containerUser: core
+    containerShell:
+      - "/bin/bash"
+    auth:
+      copyRootKeys: true
+  flightstack:
+    container: flightstack
+    containerUser: flightstack
     containerShell:
       - "/bin/bash"
     auth:
@@ -50,6 +58,6 @@ images:
       source: /mnt/rootfs/coreenv/flightstack
       squash: true
       buildArgs:
-        - ROS_BUILD_DISTRO: noetic
-        - VERSION: 1.0.0-beta1
-        - BUILD_TIMESTAMP: internal
+        - "ROS_BUILD_DISTRO=noetic"
+        - "VERSION": "1.0.0-beta1"
+        - "BUILD_TIMESTAMP": "internal"

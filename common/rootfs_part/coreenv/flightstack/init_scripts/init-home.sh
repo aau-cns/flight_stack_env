@@ -17,7 +17,7 @@
 # setup default values
 USER_ID=core
 WS_IN_NAME=ros_cws/cns_flightstack_cws
-WS_OUT_NAME=catkin_ws
+WS_OUT_NAME=flightstack_cws
 SEPERATE_MAVROS=false
 AUTOBUILD=false
 

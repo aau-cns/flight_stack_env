@@ -1,8 +1,14 @@
-# General information
-## Compile with number of cores-1 to prevent overload
-## RUN make -j`nproc --ignore=1`
-
-
+# Copyright (C) 2020-2022  Christian Brommer, Martin Scheiber,
+# and others, Control of Networked Systems, University of Klagenfurt, Austria.
+#
+# All rights reserved.
+#
+# This software is licensed under the terms of the BSD-2-Clause-License with
+# no commercial use allowed, the full terms of which are made available
+# in the LICENSE file. No license in patents is granted.
+#
+# You can contact the authors at <christian.brommer@aau.at>
+# and <martin.scheiber@aau.at>.
 
 # setup stage
 ARG FS_TAG=latest
@@ -13,12 +19,18 @@ LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
 LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
 LABEL description="CNS Flight Stack Environment for SkiffOS"
 
+# Show the user list in lightdm
+RUN \
+    mkdir -p /etc/lightdm/lightdm.conf.d && \
+    printf '[Seat:*]\ngreeter-hide-users=false\n' > /etc/lightdm/lightdm.conf.d/01-enable-users.conf
+
 RUN \
   adduser core \
   --no-create-home \
   --gecos "Core User" \
   --shell /bin/bash \
   --disabled-password && \
+  adduser core audio && \
   adduser core sudo && \
   adduser core root && \
   adduser core systemd-journal && \
@@ -33,6 +45,7 @@ RUN \
   --gecos "Flightstack User" \
   --shell /bin/bash \
   --disabled-password && \
+  adduser flightstack audio && \
   adduser flightstack sudo && \
   adduser flightstack root && \
   adduser flightstack systemd-journal && \
@@ -64,5 +77,6 @@ RUN systemctl set-default multi-user.target && \
 # Mask unneeded service to prevent it from failing
 RUN systemctl mask kmod-static-nodes
 
-WORKDIR /home/core
+WORKDIR /home/flightstack
 ENTRYPOINT ["/lib/systemd/systemd"]
+# use different entrypoint and cmd with user selection here?

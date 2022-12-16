@@ -20,7 +20,7 @@ on:
 
 jobs:
   build_container_latest:
-    name: Build Flightstack Container (main - ${UNIX_SHORT}_${{ matrix.ROS_DISTRO }})
+    name: Build Flightstack Container (main - ${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }})
     if: ${{ github.ref_name == 'main' }}
     runs-on: ubuntu-latest
     strategy:
@@ -30,18 +30,23 @@ jobs:
         UNIX_BASE:
           - ubuntu:bionic
           - ubuntu:focal
+          - skiffos/skiff-core-linux4tegra:latest
         include:
           - UNIX_BASE: ubuntu:bionic
             UNIX_SHORT: ubionic
+            PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
           - UNIX_BASE: ubuntu:focal
             UNIX_SHORT: ufocal
+            PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+          - UNIX_BASE: skiffos/skiff-core-linux4tegra:latest
+            UNIX_SHORT: orin
+            PLATFORMS: "linux/arm/v7"
     env:
       IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
       IMAGE_NAME: flight_stack
       COMMIT_HASH: ${{ github.sha }}
       LATEST_ROS: noetic
       LATEST_UNIX: ubuntu:focal
-      PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
       GIT_VERSION: 1.0.0-beta1
     steps:
       - name: Get current date
@@ -72,10 +77,10 @@ jobs:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
              docker buildx build \
-               --platform=${PLATFORMS} \
+               --platform=${{ matrix.PLATFORMS }} \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:latest \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:${COMMIT_HASH::6} \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}:${UNIX_SHORT}_${{ matrix.ROS_DISTRO }} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }} \
                --build-arg VERSION="${GIT_VERSION}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
                --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \
@@ -89,8 +94,8 @@ jobs:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
              docker buildx build \
-               --platform=${PLATFORMS} \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}:${UNIX_SHORT}_${{ matrix.ROS_DISTRO }} \
+               --platform=${{ matrix.PLATFORMS }} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }} \
                --build-arg VERSION="${GIT_VERSION}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
                --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \

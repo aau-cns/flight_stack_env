@@ -1,1 +1,1 @@
-LABEL=flightstack_drive /flightstack_data auto noauto,x-systemd.automount 0 2
+LABEL=flightstack_drive /data auto noauto,x-systemd.automount 0 2
