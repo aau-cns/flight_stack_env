@@ -53,51 +53,51 @@ RUN \
     apt-get install -y  \
     -o "Dpkg::Options::=--force-confdef"  \
     -o "Dpkg::Options::=--force-confold"  \
-    autotools-dev \
-    build-essential \
+    apt-utils \
     aptitude \
     autoconf \
+    autotools-dev \
+    autotools-dev \
+    build-essential \
+    ca-certificates \
+    cmake \
     curl \
+    dirmngr \
+    doxygen \
     git \
-    htop \
     glances \
+    gnupg2 \
+    htop \
+    i2c-tools \
+    iputils-ping \
+    less \
+    libeigen3-dev \
+    libgflags-dev \
+    libgoogle-glog-dev \
+    libgphoto2-dev \
+    libhdf5-dev \
+    libprotobuf-dev \
+    libusb-1.0-0-dev \
     locales \
     lsb-release \
-    nano \
-    vim \
-    less \
-    screen \
-    tmux \
-    autotools-dev \
-    cmake \
-    net-tools \
-    iputils-ping \
-    openssh-client \
     mosh \
+    nano \
+    net-tools \
+    openssh-client \
+    parallel \
+    protobuf-compiler \
     rsync \
+    screen \
     software-properties-common \
+    stress \
     sudo \
     systemd \
-    stress \
+    tmux \
+    udev \
     unzip \
     usbutils \
-    apt-utils \
-    ca-certificates \
+    vim \
     wget \
-    parallel \
-    udev \
-    dirmngr \
-    gnupg2 \
-    libusb-1.0-0-dev \
-    i2c-tools \
-    libprotobuf-dev \
-    protobuf-compiler \
-    libgoogle-glog-dev \
-    libgflags-dev \
-    libgphoto2-dev \
-    libeigen3-dev \
-    libhdf5-dev \
-    doxygen \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -113,9 +113,10 @@ COPY ./home /opt/skiff-core/home
 COPY ./init_scripts /opt/skiff-core/init
 
 # system configuration
-COPY ./etc/fstab /etc/fstab
-COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
-COPY ./udev/rules.d/ /etc/udev/rules.d/
+COPY ./etc /etc
+# COPY ./etc/fstab /etc/fstab
+# COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
+# COPY ./udev/rules.d/ /etc/udev/rules.d/
 
 # copy workspace to root
 WORKDIR /opt/ros_cws/
