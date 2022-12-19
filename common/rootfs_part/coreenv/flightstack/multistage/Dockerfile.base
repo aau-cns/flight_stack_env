@@ -17,6 +17,7 @@ FROM $UNIX_BASE AS stage1
 ARG VERSION
 ARG BUILD_TIMESTAMP
 ARG ROS_BUILD_DISTRO
+ARG TIMEZONE="Etc/UTC"
 
 # labels
 LABEL author="Christian Brommer <christian.brommer@ieee.org>"
@@ -41,8 +42,8 @@ ENV FLIGHTSTACK_VERSION=${VERSION} \
     ROS_DISTRO=${ROS_BUILD_DISTRO}
 
 # Setup timezone
-RUN echo 'Etc/UTC' > /etc/timezone && \
-    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+RUN echo "${TIMEZONE}" > /etc/timezone && \
+    ln -fs /usr/share/zoneinfo/${TIMEZONE} /etc/localtime && \
     apt-get update && apt-get install -q -y tzdata && rm -rf /var/lib/apt/lists/*
 
 # Minimum general ubuntu packages

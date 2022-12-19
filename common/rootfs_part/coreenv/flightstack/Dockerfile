@@ -17,6 +17,7 @@ FROM $UNIX_BASE AS stage1
 ARG VERSION
 ARG BUILD_TIMESTAMP
 ARG ROS_BUILD_DISTRO
+ARG TIMEZONE="Etc/UTC"
 
 # labels
 LABEL author="Christian Brommer <christian.brommer@ieee.org>"
@@ -41,8 +42,8 @@ ENV FLIGHTSTACK_VERSION=${VERSION} \
     ROS_DISTRO=${ROS_BUILD_DISTRO}
 
 # Setup timezone
-RUN echo 'Etc/UTC' > /etc/timezone && \
-    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+RUN echo "${TIMEZONE}" > /etc/timezone && \
+    ln -fs /usr/share/zoneinfo/${TIMEZONE} /etc/localtime && \
     apt-get update && apt-get install -q -y tzdata && rm -rf /var/lib/apt/lists/*
 
 # Minimum general ubuntu packages
@@ -52,51 +53,51 @@ RUN \
     apt-get install -y  \
     -o "Dpkg::Options::=--force-confdef"  \
     -o "Dpkg::Options::=--force-confold"  \
-    autotools-dev \
-    build-essential \
+    apt-utils \
     aptitude \
     autoconf \
+    autotools-dev \
+    autotools-dev \
+    build-essential \
+    ca-certificates \
+    cmake \
     curl \
+    dirmngr \
+    doxygen \
     git \
-    htop \
     glances \
+    gnupg2 \
+    htop \
+    i2c-tools \
+    iputils-ping \
+    less \
+    libeigen3-dev \
+    libgflags-dev \
+    libgoogle-glog-dev \
+    libgphoto2-dev \
+    libhdf5-dev \
+    libprotobuf-dev \
+    libusb-1.0-0-dev \
     locales \
     lsb-release \
-    nano \
-    vim \
-    less \
-    screen \
-    tmux \
-    autotools-dev \
-    cmake \
-    net-tools \
-    iputils-ping \
-    openssh-client \
     mosh \
+    nano \
+    net-tools \
+    openssh-client \
+    parallel \
+    protobuf-compiler \
     rsync \
+    screen \
     software-properties-common \
+    stress \
     sudo \
     systemd \
-    stress \
+    tmux \
+    udev \
     unzip \
     usbutils \
-    apt-utils \
-    ca-certificates \
+    vim \
     wget \
-    parallel \
-    udev \
-    dirmngr \
-    gnupg2 \
-    libusb-1.0-0-dev \
-    i2c-tools \
-    libprotobuf-dev \
-    protobuf-compiler \
-    libgoogle-glog-dev \
-    libgflags-dev \
-    libgphoto2-dev \
-    libeigen3-dev \
-    libhdf5-dev \
-    doxygen \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -272,5 +273,6 @@ RUN systemctl set-default multi-user.target && \
 # Mask unneeded service to prevent it from failing
 RUN systemctl mask kmod-static-nodes
 
-WORKDIR /home/flightstack
+# WORKDIR /home/flightstack
+CMD ["/opt/skiff-core/init/select-workdir.sh"]
 ENTRYPOINT ["/lib/systemd/systemd"]
