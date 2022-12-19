@@ -113,9 +113,10 @@ COPY ./home /opt/skiff-core/home
 COPY ./init_scripts /opt/skiff-core/init
 
 # system configuration
-COPY ./etc/fstab /etc/fstab
-COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
-COPY ./udev/rules.d/ /etc/udev/rules.d/
+COPY ./etc /etc
+# COPY ./etc/fstab /etc/fstab
+# COPY ./etc/modules-load.d/i2c.conf /etc/modules-load.d/i2c.conf
+# COPY ./udev/rules.d/ /etc/udev/rules.d/
 
 # copy workspace to root
 WORKDIR /opt/ros_cws/
@@ -220,20 +221,20 @@ RUN \
     mkdir -p /etc/lightdm/lightdm.conf.d && \
     printf '[Seat:*]\ngreeter-hide-users=false\n' > /etc/lightdm/lightdm.conf.d/01-enable-users.conf
 
-RUN \
-  adduser core \
-  --no-create-home \
-  --gecos "Core User" \
-  --shell /bin/bash \
-  --disabled-password && \
-  adduser core audio && \
-  adduser core sudo && \
-  adduser core root && \
-  adduser core systemd-journal && \
-  adduser core dialout && \
-  adduser core plugdev && \
-  mkdir -p /home/core/ && \
-  chown core:core /home/core
+# RUN \
+#   adduser core \
+#   --no-create-home \
+#   --gecos "Core User" \
+#   --shell /bin/bash \
+#   --disabled-password && \
+#   adduser core audio && \
+#   adduser core sudo && \
+#   adduser core root && \
+#   adduser core systemd-journal && \
+#   adduser core dialout && \
+#   adduser core plugdev && \
+#   mkdir -p /home/core/ && \
+#   chown core:core /home/core
 
 RUN \
   adduser flightstack \
@@ -273,6 +274,5 @@ RUN systemctl set-default multi-user.target && \
 # Mask unneeded service to prevent it from failing
 RUN systemctl mask kmod-static-nodes
 
-# WORKDIR /home/flightstack
-CMD ["/opt/skiff-core/init/select-workdir.sh"]
+WORKDIR /home
 ENTRYPOINT ["/lib/systemd/systemd"]

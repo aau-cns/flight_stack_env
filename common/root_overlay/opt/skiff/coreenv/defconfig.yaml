@@ -48,7 +48,7 @@ users:
     auth:
       copyRootKeys: true
 images:
-  aau-cns-docker/docker_registry/flight_stack:latest:
+  aau-cns-docker/docker_registry/cns_uav_base:orin:
     pull:
       # images are provided for arm64, arm, amd64
       # also an option: policy: ifbuildfails
@@ -58,6 +58,21 @@ images:
       source: /mnt/rootfs/coreenv/flightstack
       squash: true
       buildArgs:
-        - "ROS_BUILD_DISTRO=noetic"
-        - "VERSION": "1.0.0-beta1"
-        - "BUILD_TIMESTAMP": "internal"
+        ROS_BUILD_DISTRO: noetic
+        VERSION": 1.0.0-beta1
+        BUILD_TIMESTAMP: internal
+        FLIGHTSTACK_VERSION: orin
+  aau-cns-docker/docker_registry/flight_stack_base:orin:
+    pull:
+      # images are provided for arm64, arm, amd64
+      # also an option: policy: ifbuildfails
+      policy: ifnotexists
+      registry: gitlab.aau.at:5050
+    build:
+      source: /mnt/rootfs/coreenv/flightstack
+      squash: true
+      buildArgs:
+        ROS_BUILD_DISTRO: noetic
+        VERSION": 1.0.0-beta1
+        BUILD_TIMESTAMP: internal
+        UNIX_BASE: skiffos/skiff-core-linux4tegra:latest
