@@ -221,20 +221,22 @@ RUN \
     mkdir -p /etc/lightdm/lightdm.conf.d && \
     printf '[Seat:*]\ngreeter-hide-users=false\n' > /etc/lightdm/lightdm.conf.d/01-enable-users.conf
 
-# RUN \
-#   adduser core \
-#   --no-create-home \
-#   --gecos "Core User" \
-#   --shell /bin/bash \
-#   --disabled-password && \
-#   adduser core audio && \
-#   adduser core sudo && \
-#   adduser core root && \
-#   adduser core systemd-journal && \
-#   adduser core dialout && \
-#   adduser core plugdev && \
-#   mkdir -p /home/core/ && \
-#   chown core:core /home/core
+RUN \
+  adduser core \
+  --no-create-home \
+  --gecos "Core User" \
+  --shell /bin/bash \
+  --disabled-password && \
+  adduser core audio && \
+  adduser core sudo && \
+  adduser core root && \
+  adduser core systemd-journal && \
+  adduser core dialout && \
+  adduser core plugdev && \
+  mkdir -p /home/core/ && \
+  chown core:core /home/core && \
+  echo "core	ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/core && \
+  chmod 0440 /etc/sudoers.d/core
 
 RUN \
   adduser flightstack \
@@ -249,7 +251,9 @@ RUN \
   adduser flightstack dialout && \
   adduser flightstack plugdev && \
   mkdir -p /home/flightstack/ && \
-  chown flightstack:flightstack /home/flightstack
+  chown flightstack:flightstack /home/flightstack && \
+  echo "flightstack	ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/flightstack && \
+  chmod 0440 /etc/sudoers.d/flightstack
 
 # mask conflicting services
 RUN systemctl set-default multi-user.target && \

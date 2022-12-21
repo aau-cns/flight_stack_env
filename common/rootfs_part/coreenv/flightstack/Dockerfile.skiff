@@ -37,7 +37,9 @@ RUN \
   adduser core dialout && \
   adduser core plugdev && \
   mkdir -p /home/core/ && \
-  chown core:core /home/core
+  chown core:core /home/core && \
+  echo "core	ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/core && \
+  chmod 0440 /etc/sudoers.d/core
 
 RUN \
   adduser flightstack \
@@ -52,7 +54,9 @@ RUN \
   adduser flightstack dialout && \
   adduser flightstack plugdev && \
   mkdir -p /home/flightstack/ && \
-  chown flightstack:flightstack /home/flightstack
+  chown flightstack:flightstack /home/flightstack && \
+  echo "flightstack	ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/flightstack && \
+  chmod 0440 /etc/sudoers.d/flightstack
 
 # mask conflicting services
 RUN systemctl set-default multi-user.target && \
