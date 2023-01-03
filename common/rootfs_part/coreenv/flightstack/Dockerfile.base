@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2022  Christian Brommer, Martin Scheiber,
+# Copyright (C) 2023  Christian Brommer, Martin Scheiber,
 # and others, Control of Networked Systems, University of Klagenfurt, Austria.
 #
 # All rights reserved.
@@ -56,7 +56,6 @@ RUN \
     apt-utils \
     aptitude \
     autoconf \
-    autotools-dev \
     autotools-dev \
     build-essential \
     ca-certificates \
@@ -167,16 +166,16 @@ RUN \
     && rosdep update \
     && apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-ros-base=1.5.0-1* \
-    ros-${ROS_DISTRO}-mavros \
-    ros-${ROS_DISTRO}-mavros-extras \
-    ros-${ROS_DISTRO}-geometry-msgs \
-    ros-${ROS_DISTRO}-sensor-msgs \
-    ros-${ROS_DISTRO}-std-msgs \
     ros-${ROS_DISTRO}-angles \
     ros-${ROS_DISTRO}-control-toolbox \
     ros-${ROS_DISTRO}-cv-bridge \
-    ros-${ROS_DISTRO}-image-transport \
     ros-${ROS_DISTRO}-ddynamic-reconfigure \
+    ros-${ROS_DISTRO}-geometry-msgs \
+    ros-${ROS_DISTRO}-image-transport \
+    ros-${ROS_DISTRO}-mavros \
+    ros-${ROS_DISTRO}-mavros-extras \
+    ros-${ROS_DISTRO}-sensor-msgs \
+    ros-${ROS_DISTRO}-std-msgs \
     ros-${ROS_DISTRO}-tf2-tools \
     && rm -rf /var/lib/apt/lists/* \
     && wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh  \

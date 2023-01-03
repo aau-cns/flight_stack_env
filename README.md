@@ -39,14 +39,14 @@ cd flight_stack_skiffos
 ```
 
 ### Existing SkiffOS Workspace
-Add the flightstack environment to your additional SkiffOS configs
+Add the flight stack environment to your additional SkiffOS configs
 
 ```bash
 mkdir -p skiff_configs/ && cd skiff_configs/
 git pull https://github.com/aau-cns/flight_stack_env.git flightstack
 ```
 
-This can be used as part of [SkiffOS](https://github.com/skiffos/skiffos) as an config. Before compiling skiffos add this directory to the `SKIFF_EXTRA_CONFIGS_PATH`
+This can be used as part of [SkiffOS](https://github.com/skiffos/skiffos) as a config. Before compiling SkiffOS add this directory to the `SKIFF_EXTRA_CONFIGS_PATH`
 
 ```bash
 cd skiff_configs/
@@ -55,11 +55,11 @@ cd <path_to_skiffos>
 make # this will print now a config called flight_stack/full and flight_stack/virtual
 ```
 
-If you then change directory to Skiffos and perform a `make` this configuration should show up in the list.
+If you then change the directory to Skiffos and perform a `make` this configuration should appear in the list.
 
 ## Usage
 ### Build Full
-For embedded hardware use the full configuration of the flightstack environment
+For embedded hardware, use the full configuration of the flight stack environment
 
 ```bash
 # for RPi4 use
@@ -69,7 +69,7 @@ export SKIFF_CONFIG=odroid/xu,flightstack/full
 ```
 
 ### Build for Virtual Environments
-For virtual environment such as the virtualbox or v86 use the virtual command from the flightstack
+For virtual environments such as the virtualbox or v86, use the virtual command from the flight stack
 
 ```bash
 # for virtualbox use
@@ -88,7 +88,7 @@ Optionally you can also pull a pre-compiled docker container for the flight stac
 systemctl stop skiff-core
 ```
 
-2. Delete the previously build image
+2. Delete the previously built image
 
 ```sh
 docker rmi core
@@ -117,19 +117,68 @@ systemctl start skiff-core
 
 ## Developer Information
 
-Images are auto-built through the GitHub workflows. If you want to (cross-) compile them on you own device use
+Images are auto-built through the GitHub workflows. If you want to (cross-) compile them on your own device use
 
 ```bash
 export DOCKER_REGISTRY=gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack
+
+# compile base image
+docker buildx build \
+  --platform=linux/amd64,linux/arm64,linux/arm/v7 \
+  --tag ${DOCKER_REGISTRY}_base:dev \
+  --tag ${DOCKER_REGISTRY}_base:$(git log -1 --pretty=%h) \
+  --build-arg VERSION="$(git log -1 --pretty=%h)" \
+  --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
+  --build-arg ROS_BUILD_DISTRO="noetic" \
+  --build-arg UNIX_BASE="ubuntu:focal" \
+  --compress --force-rm \
+  -f ./common/rootfs_part/coreenv/flightstack/Dockerfile.base \
+  ./common/rootfs_part/coreenv/flightstack/
+  # --push #if you want to commit
+
+# compile skiff image (includes users)
 docker buildx build \
   --platform=linux/amd64,linux/arm64,linux/arm/v7 \
   --tag ${DOCKER_REGISTRY}:dev \
   --tag ${DOCKER_REGISTRY}:$(git log -1 --pretty=%h) \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
   --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
-  --build-arg ROS_BUILD_DISTRO="noetic" \
-  --build-arg UNIX_BASE="ubuntu:focal" \
+  --build-arg FS_TAG="latest" \
   --compress --force-rm \
+  -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
+  ./common/rootfs_part/coreenv/flightstack/
+  # --push #if you want to commit
+```
+
+If you want to compile for other hardware, feel free to edit the `platform` and `UNIX_BASE` variables. E.g., for the `jetson`, the build steps are
+
+```bash
+export DOCKER_REGISTRY=gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack
+
+# compile base image
+docker buildx build \
+  --platform=linux/arm/v7 \
+  --tag ${DOCKER_REGISTRY}_base:dev_jetson \
+  --tag ${DOCKER_REGISTRY}_base:$(git log -1 --pretty=%h) \
+  --build-arg VERSION="$(git log -1 --pretty=%h)" \
+  --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
+  --build-arg ROS_BUILD_DISTRO="noetic" \
+  --build-arg UNIX_BASE="skiffos/skiff-core-linux4tegra:latest" \
+  --compress --force-rm \
+  -f ./common/rootfs_part/coreenv/flightstack/Dockerfile.base \
+  ./common/rootfs_part/coreenv/flightstack/
+  # --push #if you want to commit
+
+# compile skiff image (includes users)
+docker buildx build \
+  --platform=linux/arm/v7 \
+  --tag ${DOCKER_REGISTRY}:dev_jetson \
+  --tag ${DOCKER_REGISTRY}:$(git log -1 --pretty=%h) \
+  --build-arg VERSION="$(git log -1 --pretty=%h)" \
+  --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
+  --build-arg FS_TAG="dev_jetson" \
+  --compress --force-rm \
+  -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
   ./common/rootfs_part/coreenv/flightstack/
   # --push #if you want to commit
 ```
