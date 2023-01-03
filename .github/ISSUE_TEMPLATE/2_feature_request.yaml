@@ -3,8 +3,8 @@ description: Suggest a new feature for this project
 title: "[Feature]: "
 labels: ["feature", "request", "todo"]
 assignees:
-  - mascheiber
   - Chris-Bee
+  - mascheiber
 body:
   - type: markdown
     attributes:

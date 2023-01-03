@@ -1,6 +1,7 @@
 # CNS Flight Stack: SkiffOS Environment
 
-<!-- [![Release](https://img.shields.io/github/v/release/aau-cns/flight_stack?logo=github)](https://github.com/aau-cns/flight_stack/releases) -->
+[![Release](https://img.shields.io/github/v/release/aau-cns/flight_stack_env?include_prereleases&logo=github)](https://github.com/aau-cns/flight_stack_env/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/aau-cns/flight_stack_env/build-env-container.yml?branch=main&logo=docker&label=latest%20build)](https://github.com/aau-cns/flight_stack_env/actions/workflows/build-env-container.yml)
 [![License](https://img.shields.io/badge/License-AAUCNS-336B81.svg)](https://github.com/aau-cns/flight_stack_env/blob/main/LICENSE) [![Paper](https://img.shields.io/badge/IEEEXplore-10.1109/LRA.2022.3196117-00629B.svg?logo=ieee)](https://doi.org/10.1109/LRA.2022.3196117)
 
 
@@ -182,3 +183,8 @@ docker buildx build \
   ./common/rootfs_part/coreenv/flightstack/
   # --push #if you want to commit
 ```
+
+---
+
+Copyright (C) 2021-2023 Christian Brommer and Martin Scheiber, Control of Networked Systems, University of Klagenfurt, Austria.
+You can contact the authors at [christian.brommer@aau.at](mailto:christian.brommer@aau.at?subject=[CNS%20Flight%20Stack]%20flightstack%20SKiffOS%20Environment), [martin.scheiber@aau.at](mailto:martin.scheiber@aau.at?subject=[CNS%20Flight%20Stack]%20flightstack%20SKiffOS%20Environment).

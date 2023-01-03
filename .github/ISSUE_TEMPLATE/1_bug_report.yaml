@@ -3,8 +3,8 @@ description: File a bug report
 title: "[Bug]: "
 labels: ["bug", "todo"]
 assignees:
-  - mascheiber
   - Chris-Bee
+  - mascheiber
 body:
   - type: markdown
     attributes:
