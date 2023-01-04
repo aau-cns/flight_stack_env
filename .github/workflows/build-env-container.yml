@@ -44,6 +44,8 @@ jobs:
         exclude:
           - UNIX_BASE: ubuntu:bionic
             ROS_DISTRO: noetic
+          - UNIX_BASE: skiffos/skiff-core-linux4tegra:latest
+            ROS_DISTRO: melodic
     env:
       IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
       IMAGE_NAME: flight_stack
