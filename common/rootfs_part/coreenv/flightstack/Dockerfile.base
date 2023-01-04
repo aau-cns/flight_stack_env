@@ -162,10 +162,15 @@ RUN apt-get update && apt-get install ca-cacert && \
 ## Install ROS components
 WORKDIR /opt/flightstack
 RUN \
-    rosdep init \
+    if [ $ROS_DISTRO = noetic ]; then \
+      export ROS_BASE_VERSION="1.5.0-1*"; \
+    else \
+      export ROS_BASE_VERSION="1.4.1-0*"; \
+    fi \
+    && rosdep init \
     && rosdep update \
     && apt-get update && apt-get install -y \
-    ros-${ROS_DISTRO}-ros-base=1.5.0-1* \
+    ros-${ROS_DISTRO}-ros-base=${ROS_BASE_VERSION} \
     ros-${ROS_DISTRO}-angles \
     ros-${ROS_DISTRO}-control-toolbox \
     ros-${ROS_DISTRO}-cv-bridge \

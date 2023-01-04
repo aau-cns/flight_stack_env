@@ -41,6 +41,9 @@ jobs:
           - UNIX_BASE: skiffos/skiff-core-linux4tegra:latest
             UNIX_SHORT: jetson
             PLATFORMS: "linux/arm/v7"
+        exclude:
+          - UNIX_BASE: ubuntu:bionic
+            ROS_DISTRO: noetic
     env:
       IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
       IMAGE_NAME: flight_stack
