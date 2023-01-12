@@ -11,8 +11,8 @@
 # and <martin.scheiber@aau.at>.
 
 # setup stage
-ARG FS_TAG=latest
-FROM gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack_base:${FS_TAG} AS base
+ARG BASE_TAG=latest
+FROM gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack_base:${BASE_TAG} AS base
 ARG VERSION
 ARG BUILD_TIMESTAMP
 
