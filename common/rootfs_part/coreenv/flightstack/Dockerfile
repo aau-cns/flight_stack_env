@@ -24,12 +24,12 @@ LABEL description="CNS Flight Stack Environment for SkiffOS"
 
 # flightstack environment
 ENV FLIGHTSTACK_VERSION=${VERSION} \
-    FLIGHTSTACK_BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
+  FLIGHTSTACK_BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
 
 # Show the user list in lightdm
 RUN \
-    mkdir -p /etc/lightdm/lightdm.conf.d && \
-    printf '[Seat:*]\ngreeter-hide-users=false\n' > /etc/lightdm/lightdm.conf.d/01-enable-users.conf
+  mkdir -p /etc/lightdm/lightdm.conf.d && \
+  printf '[Seat:*]\ngreeter-hide-users=false\n' > /etc/lightdm/lightdm.conf.d/01-enable-users.conf
 
 RUN \
   adduser core \
@@ -65,25 +65,29 @@ RUN \
   echo "flightstack	ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/flightstack && \
   chmod 0440 /etc/sudoers.d/flightstack
 
+# create service for initiating flightstack user
+RUN ln -s /opt/skiff-core/init/init-home-flightstack.service /etc/systemd/system/ \
+  ln -s /opt/skiff-core/init/init-home-flightstack.service /etc/systemd/system/multi-user.target.wants/
+
 # mask conflicting services
 RUN systemctl set-default multi-user.target && \
-    systemctl mask tmp.mount && \
-    (systemctl mask NetworkManager ModemManager wpa_supplicant) && \
-    find /etc/systemd/system \
-        /lib/systemd/system \
-        \( -path '*.wants/*' \
-        -name '*swapon*' \
-        -or -name '*ntpd*' \
-        -or -name '*resolved*' \
-        -or -name '*udev*' \
-        -or -name '*freedesktop*' \
-        -or -name '*remount-fs*' \
-        -or -name '*getty*' \
-        -or -name '*systemd-sysctl*' \
-        -or -name '*.mount' \
-        -or -name '*remote-fs*' \) \
-        -exec echo \{} \; \
-        -exec rm \{} \;
+  systemctl mask tmp.mount && \
+  (systemctl mask NetworkManager ModemManager wpa_supplicant) && \
+  find /etc/systemd/system \
+  /lib/systemd/system \
+  \( -path '*.wants/*' \
+  -name '*swapon*' \
+  -or -name '*ntpd*' \
+  -or -name '*resolved*' \
+  -or -name '*udev*' \
+  -or -name '*freedesktop*' \
+  -or -name '*remount-fs*' \
+  -or -name '*getty*' \
+  -or -name '*systemd-sysctl*' \
+  -or -name '*.mount' \
+  -or -name '*remote-fs*' \) \
+  -exec echo \{} \; \
+  -exec rm \{} \;
 
 # Mask unneeded service to prevent it from failing
 RUN systemctl mask kmod-static-nodes

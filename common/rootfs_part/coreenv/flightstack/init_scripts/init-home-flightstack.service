@@ -1,0 +1,13 @@
+[Unit]
+Description=Init core home directory
+DefaultDependencies=no
+Requires=home-core.mount network.target
+After=home-core.mount network-online.target
+
+[Service]
+Type=oneshot
+User=flightstack
+ExecStart=/opt/skiff-core/init/init-home.sh -u flightstack -m -a
+
+[Install]
+WantedBy=multi-user.target
