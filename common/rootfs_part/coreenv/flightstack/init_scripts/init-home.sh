@@ -21,8 +21,7 @@ set -eo pipefail
 ################################################################################
 
 # setup default values
-USER_ID=core
-WS_IN_NAME=ros_cws/cns_flightstack_cws
+USER_ID=flightstack
 WS_OUT_NAME=flightstack_cws
 SEPERATE_MAVROS=false
 AUTOBUILD=false
@@ -42,15 +41,15 @@ TOTAL_JOBS=3
 function print_usage {
   echo "USAGE: ./init-home.sh"
   echo ""
+  echo "  Initializes the home directory of flightstack user"
+  echo ""
   echo "  Parameters:"
   echo "    -m          create seperate workspace for MavROS"
   echo "    -a          autobuild workspaces"
   echo "    -u [USER]   user to create the home directory for"
-  echo "                default: core"
-  echo "    -i [CWS]    workspace to copy from /opt"
-  echo "                default: ros_cws/cns_flightstack_cws"
+  echo "                default: flightstack"
   echo "    -o [CWS]    workspace to copy to"
-  echo "                default: catkin_ws"
+  echo "                default: flightstack_cws"
   echo "    -d          detailed verbose output"
   echo "    -h          print this help"
   echo ""
@@ -98,27 +97,14 @@ function print_job_end_sub {
 # Setup Workspace Helper Function                                              #
 ################################################################################
 
-# usage: setup_workspace <WS_IN_PATH> <WS_OUT_PATH> <WORKSPACE_EXTENSION_STR> <AUTOBUILD_BOOL> <RSYNC_ADDITION_STR>
+# usage: setup_workspace <WS_OUT_PATH> <WORKSPACE_EXTENSION_STR> <AUTOBUILD_BOOL>
 function setup_workspace {
-  WS_IN_PATH=${1}
-  WS_OUT_PATH=${2}
-  WS_EXT=${3}
-  AUTO_BUILD=${4}
-  RSYNC_ADD=${5}
-
-  RSYNC_CMD='-a -c '${WS_IN_PATH}' '${WS_OUT_PATH}' --exclude build/ --exclude devel/ --exclude install/ --exclude driver/ '${RSYNC_ADD}
-  if [ ${VERBOSE} = true ]; then
-    RSYNC_CMD="${RSYNC_CMD} -v"
-  else
-    RSYNC_CMD="${RSYNC_CMD} -q"
-  fi
-
-  # copy workspace
-  print_log "copying ${WS_OUT_PATH} files"
-  rsync ${RSYNC_CMD}
+  WS_OUT_PATH=${1}
+  WS_EXT=${2}
+  AUTO_BUILD=${3}
 
   # check for build
-  local l_autobuild=${AUTOBUILD}
+  local l_autobuild=${AUTO_BUILD}
   if [ "${l_autobuild}" = false ]; then
     read -p "  Do you want to compile the ${WS_OUT_PATH} workspace? (y/n)" -n 1 -r
     echo
@@ -244,18 +230,19 @@ print_job_start "setup flightstack workspace"
 ## COPY AND SETUP FLIGHTSTACK WORKSPACE
 if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
   print_debug "Setting up ${WS_OUT_NAME} for ${USER_ID}..."
-  print_debug "Updating remote WS"
-  cd /opt/${WS_IN_NAME}/; git pull && git submodule update --recursive --init; cd -
+  print_debug "Pulling remote WS"
+
+  cd /home/${USER_ID}/ && git clone https://github.com/aau-cns/flight_stack ${WS_OUT_NAME} \
+    && cd /home/${USER_ID}/${WS_OUT_NAME}/ && git submodule update --init --recursive
 
   # setup commands
-  RSYNC_ADD=""
   WS_EXTENSION="/opt/ros/${ROS_DISTRO}"
 
   print_job_start_sub "setup mavros catkin workspace"
   if [ "${SEPERATE_MAVROS}" = true ]; then
     # change flightstack workspace setup
     MAVROS_PATH="/home/${USER_ID}/mavros_cws"
-    RSYNC_ADD="--exclude src/mavros/ --exclude src/mavlink/ --exclude src/mavlink-gbp-release"
+    # RSYNC_ADD="--exclude src/mavros/ --exclude src/mavlink/ --exclude src/mavlink-gbp-release"
     WS_EXTENSION="${MAVROS_PATH}/devel/"
 
     if [ ! -d /home/${USER_ID}/mavros_cws ]; then
@@ -266,12 +253,16 @@ if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
         RSYNC_CMD="-aq -c"
       fi
 
-      # copy mavros source
+      # move mavros source to seperate workspace
       print_log "copying ${MAVROS_PATH} files"
       mkdir -p "${MAVROS_PATH}/src"
-      rsync ${RSYNC_CMD} /opt/${WS_IN_NAME}/src/mavros "${MAVROS_PATH}/src/"
-      rsync ${RSYNC_CMD} /opt/${WS_IN_NAME}/src/mavlink "${MAVROS_PATH}/src/"
-      rsync ${RSYNC_CMD} /opt/${WS_IN_NAME}/src/mavlink-gbp-release "${MAVROS_PATH}/src/"
+      mv /home/${USER_ID}/${WS_OUT_NAME}/src/mavros ${MAVROS_PATH}/src/
+      mv /home/${USER_ID}/${WS_OUT_NAME}/src/mavlink ${MAVROS_PATH}/src/
+      mv /home/${USER_ID}/${WS_OUT_NAME}/src/mavlink-gbp-release ${MAVROS_PATH}/src/
+      # TODO(scm): use 'ln' after WS restrucutre
+      # ln -s /home/${USER_ID}/${WS_IN_NAME}/src/mavros ${MAVROS_PATH}/src/
+      # ln -s /home/${USER_ID}/${WS_IN_NAME}/src/mavlink ${MAVROS_PATH}/src/
+      # ln -s /home/${USER_ID}/${WS_IN_NAME}/src/mavlink-gbp-release ${MAVROS_PATH}/src/
 
       # check for mavros build
       l_autobuild=${AUTOBUILD}
@@ -314,7 +305,7 @@ EOF
 
   ## setup flightstack workspace
   print_job_start_sub "setup flightstack catkin workspace"
-  setup_workspace "/opt/${WS_IN_NAME}/" "/home/${USER_ID}/${WS_OUT_NAME}/" "${WS_EXTENSION}" "${AUTOBUILD}" "${RSYNC_ADD}"
+  setup_workspace "/home/${USER_ID}/${WS_OUT_NAME}/" "${WS_EXTENSION}" "${AUTOBUILD}"
   print_job_end_sub "setup flightstack catkin workspace"
 fi
 
