@@ -70,7 +70,7 @@ export SKIFF_CONFIG=odroid/xu,flightstack/full
 ```
 
 ### Build for Virtual Environments
-For virtual environments such as the virtualbox or v86, use the virtual command from the flight stack
+For virtual environments such as the virtualbox or v86, use the virtual environment from the flight stack. This excludes the WiFi driver, which is not required for virtual environments.
 
 ```bash
 # for virtualbox use
@@ -137,9 +137,10 @@ docker buildx build \
   --platform=linux/amd64,linux/arm64,linux/arm/v7 \
   --tag ${DOCKER_REGISTRY}:dev \
   --tag ${DOCKER_REGISTRY}:$(git log -1 --pretty=%h) \
+  --build-arg BASE_REGISTRY="${DOCKER_REGISTRY}-base" \
+  --build-arg BASE_TAG="latest" \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
   --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
-  --build-arg FS_TAG="latest" \
   --compress --force-rm \
   -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
   ./common/rootfs_part/coreenv/flightstack/
@@ -170,9 +171,10 @@ docker buildx build \
   --platform=linux/arm/v7 \
   --tag ${DOCKER_REGISTRY}:dev_jetson \
   --tag ${DOCKER_REGISTRY}:$(git log -1 --pretty=%h) \
+  --build-arg BASE_REGISTRY="${DOCKER_REGISTRY}-base" \
+  --build-arg BASE_TAG="dev_jetson" \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
   --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
-  --build-arg FS_TAG="dev_jetson" \
   --compress --force-rm \
   -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
   ./common/rootfs_part/coreenv/flightstack/
