@@ -19,8 +19,36 @@ on:
       - '.github/workflows/build-env-container.yml'
 
 jobs:
+  ##############################################################################
+  # Filter changed paths
+  # from https://stackoverflow.com/questions/70708306/github-actions-run-step-job-in-a-workflow-if-changes-happen-in-specific-folde?rq=1
+  paths-filter:
+    name: Changed File Filter
+    runs-on: ubuntu-latest
+    outputs:
+      base: ${{ steps.filter.outputs.base }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      # check if any relevant files for base image have changed (otherwise no need to recompile base)
+      - name: Check Base Change
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            base:
+              - '.github/workflows/build-env-container.yml'
+              - 'common/rootfs_part/coreenv/flightstack/Dockerfile.base'
+              - 'common/rootfs_part/coreenv/flightstack/etc/**'
+              - 'common/rootfs_part/coreenv/flightstack/home/**'
+              - 'common/rootfs_part/coreenv/flightstack/init_scripts/**'
+
+  ##############################################################################
+  # Build Latest Containers
   build_container_latest:
     name: Build Flightstack Container (main - ${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }})
+    needs: paths-filter
     if: ${{ github.ref_name == 'main' }}
     runs-on: ubuntu-latest
     strategy:
@@ -66,14 +94,6 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
 
-      # - name: Login to Registry
-      #   env:
-      #     DOCKER_USER: ${{secrets.GITLAB_REGISTRY_USER}}
-      #     DOCKER_PASSWORD: ${{secrets.GITLAB_REGISTRY_PASSWORD}}
-      #     DOCKER_URL: ${{secrets.GITLAB_REGISTRY_URL}}
-      #   run: |
-      #     docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_URL}
-
       - name: Login to Docker Registry
         uses: docker/login-action@v2
         with:
@@ -84,7 +104,7 @@ jobs:
       ########################
       ### BUILD LATEST IMAGES
       - name: Build Base Image (latest)
-        if: ${{ matrix.ROS_DISTRO == env.LATEST_ROS && matrix.UNIX_BASE == env.LATEST_UNIX }}
+        if: ${{ matrix.ROS_DISTRO == env.LATEST_ROS && matrix.UNIX_BASE == env.LATEST_UNIX && needs.paths-filter.outputs.base == 'true' }}
         env:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
@@ -122,7 +142,7 @@ jobs:
       ########################
       ### BUILD OTHER IMAGES
       - name: Build Base Image (${{ matrix.UNIX_BASE }} with ROS-${{ matrix.ROS_DISTRO }})
-        if: ${{ matrix.ROS_DISTRO != env.LATEST_ROS || matrix.UNIX_BASE != env.LATEST_UNIX }}
+        if: ${{ (matrix.ROS_DISTRO != env.LATEST_ROS || matrix.UNIX_BASE != env.LATEST_UNIX) && needs.paths-filter.outputs.base == 'true' }}
         env:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
@@ -152,9 +172,12 @@ jobs:
                --compress --force-rm --push \
                -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
                ./common/rootfs_part/coreenv/flightstack/
-
+  
+  ##############################################################################
+  # Build Ddv Containers
   build_container_dev:
     name: Build Flightstack Dev Container (${{ github.ref_name }})
+    needs: paths-filter
     if: ${{ github.ref_name != 'main' }}
     runs-on: ubuntu-latest
     strategy:
@@ -189,14 +212,6 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2.2.1
 
-      # - name: Login to Registry
-      #   env:
-      #     DOCKER_USER: ${{secrets.GITLAB_REGISTRY_USER}}
-      #     DOCKER_PASSWORD: ${{secrets.GITLAB_REGISTRY_PASSWORD}}
-      #     DOCKER_URL: ${{secrets.GITLAB_REGISTRY_URL}}
-      #   run: |
-      #     docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_URL}
-
       - name: Login to Docker Registry
         uses: docker/login-action@v2
         with:
@@ -205,6 +220,7 @@ jobs:
           # registry: ${{secrets.GITLAB_REGISTRY_URL}}
       
       - name: Build Base Image (${{ matrix.UNIX_SHORT }})
+        if : ${{ needs.paths-filter.outputs.base == 'true' }}
         env:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >

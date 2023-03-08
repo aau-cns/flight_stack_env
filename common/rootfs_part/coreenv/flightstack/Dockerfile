@@ -56,7 +56,7 @@ RUN \
 
 # create service for initiating flightstack user
 RUN ln -s /opt/skiff-flightstack/init/init-home-flightstack.service /etc/systemd/system/ \
-  ln -s /opt/skiff-flightstack/init/init-home-flightstack.service /etc/systemd/system/multi-user.target.wants/
+  && ln -s /opt/skiff-flightstack/init/init-home-flightstack.service /etc/systemd/system/multi-user.target.wants/
 
 # mask conflicting services
 RUN systemctl set-default multi-user.target && \

@@ -138,7 +138,7 @@ docker buildx build \
   --tag ${DOCKER_REGISTRY}:dev \
   --tag ${DOCKER_REGISTRY}:$(git log -1 --pretty=%h) \
   --build-arg BASE_REGISTRY="${DOCKER_REGISTRY}-base" \
-  --build-arg BASE_TAG="latest" \
+  --build-arg BASE_TAG="dev" \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
   --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
   --compress --force-rm \
