@@ -19,8 +19,36 @@ on:
       - '.github/workflows/build-env-container.yml'
 
 jobs:
+  ##############################################################################
+  # Filter changed paths
+  # from https://stackoverflow.com/questions/70708306/github-actions-run-step-job-in-a-workflow-if-changes-happen-in-specific-folde?rq=1
+  paths-filter:
+    name: Changed File Filter
+    runs-on: ubuntu-latest
+    outputs:
+      base: ${{ steps.filter.outputs.base }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      # check if any relevant files for base image have changed (otherwise no need to recompile base)
+      - name: Check Base Change
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            base:
+              - '.github/workflows/build-env-container.yml'
+              - 'common/rootfs_part/coreenv/flightstack/Dockerfile.base'
+              - 'common/rootfs_part/coreenv/flightstack/etc/**'
+              - 'common/rootfs_part/coreenv/flightstack/home/**'
+              - 'common/rootfs_part/coreenv/flightstack/init_scripts/**'
+
+  ##############################################################################
+  # Build Latest Containers
   build_container_latest:
     name: Build Flightstack Container (main - ${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }})
+    needs: paths-filter
     if: ${{ github.ref_name == 'main' }}
     runs-on: ubuntu-latest
     strategy:
@@ -30,7 +58,6 @@ jobs:
         UNIX_BASE:
           - ubuntu:bionic
           - ubuntu:focal
-          - skiffos/skiff-core-linux4tegra:latest
         include:
           - UNIX_BASE: ubuntu:bionic
             UNIX_SHORT: ubionic
@@ -38,17 +65,16 @@ jobs:
           - UNIX_BASE: ubuntu:focal
             UNIX_SHORT: ufocal
             PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
-          - UNIX_BASE: skiffos/skiff-core-linux4tegra:latest
-            UNIX_SHORT: jetson
-            PLATFORMS: "linux/arm/v7"
         exclude:
           - UNIX_BASE: ubuntu:bionic
             ROS_DISTRO: noetic
-          - UNIX_BASE: skiffos/skiff-core-linux4tegra:latest
+          - UNIX_BASE: ubuntu:focal
             ROS_DISTRO: melodic
     env:
-      IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
-      IMAGE_NAME: flight_stack
+      # IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
+      # IMAGE_NAME: flight_stack
+      IMAGE_URL: ${{ secrets.DOCKERHUB_REGISTRY_USER }}
+      IMAGE_NAME: flightstack
       COMMIT_HASH: ${{ github.sha }}
       LATEST_ROS: noetic
       LATEST_UNIX: ubuntu:focal
@@ -68,24 +94,25 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Login to Registry
-        env:
-          DOCKER_USER: ${{secrets.GITLAB_REGISTRY_USER}}
-          DOCKER_PASSWORD: ${{secrets.GITLAB_REGISTRY_PASSWORD}}
-          DOCKER_URL: ${{secrets.GITLAB_REGISTRY_URL}}
-        run: |
-          docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_URL}
+      - name: Login to Docker Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{secrets.DOCKERHUB_REGISTRY_USER}}
+          password: ${{secrets.DOCKERHUB_REGISTRY_PASSWORD}}
+          # registry: ${{secrets.GITLAB_REGISTRY_URL}}
 
+      ########################
+      ### BUILD LATEST IMAGES
       - name: Build Base Image (latest)
-        if: ${{ matrix.ROS_DISTRO == env.LATEST_ROS && matrix.UNIX_BASE == env.LATEST_UNIX }}
+        if: ${{ matrix.ROS_DISTRO == env.LATEST_ROS && matrix.UNIX_BASE == env.LATEST_UNIX && needs.paths-filter.outputs.base == 'true' }}
         env:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
              docker buildx build \
                --platform=${{ matrix.PLATFORMS }} \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}_base:latest \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}_base:${COMMIT_HASH::6} \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}_base:${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}-base:latest \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}-base:${COMMIT_HASH::7} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}-base:${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }} \
                --build-arg VERSION="${GIT_VERSION}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
                --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \
@@ -102,23 +129,26 @@ jobs:
              docker buildx build \
                --platform=${{ matrix.PLATFORMS }} \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:latest \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}:${COMMIT_HASH::6} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}:${COMMIT_HASH::7} \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }} \
+               --build-arg BASE_REGISTRY="${IMAGE_URL}/${IMAGE_NAME}-base" \
+               --build-arg BASE_TAG="latest" \
                --build-arg VERSION="${GIT_VERSION}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
-               --build-arg FS_TAG="latest" \
                --compress --force-rm --push \
                -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
                ./common/rootfs_part/coreenv/flightstack/
 
+      ########################
+      ### BUILD OTHER IMAGES
       - name: Build Base Image (${{ matrix.UNIX_BASE }} with ROS-${{ matrix.ROS_DISTRO }})
-        if: ${{ matrix.ROS_DISTRO != env.LATEST_ROS || matrix.UNIX_BASE != env.LATEST_UNIX }}
+        if: ${{ (matrix.ROS_DISTRO != env.LATEST_ROS || matrix.UNIX_BASE != env.LATEST_UNIX) && needs.paths-filter.outputs.base == 'true' }}
         env:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
              docker buildx build \
                --platform=${{ matrix.PLATFORMS }} \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}_base:${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}-base:${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }} \
                --build-arg VERSION="${GIT_VERSION}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
                --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \
@@ -135,16 +165,19 @@ jobs:
              docker buildx build \
                --platform=${{ matrix.PLATFORMS }} \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }} \
+               --build-arg BASE_REGISTRY="${IMAGE_URL}/${IMAGE_NAME}-base" \
+               --build-arg BASE_TAG="${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }}" \
                --build-arg VERSION="${GIT_VERSION}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
-               --build-arg ROS_BUILD_DISTRO="${{ matrix.ROS_DISTRO }}" \
-               --build-arg FS_TAG="${{ matrix.UNIX_SHORT }}_${{ matrix.ROS_DISTRO }}" \
                --compress --force-rm --push \
                -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
                ./common/rootfs_part/coreenv/flightstack/
-
+  
+  ##############################################################################
+  # Build Ddv Containers
   build_container_dev:
     name: Build Flightstack Dev Container (${{ github.ref_name }})
+    needs: paths-filter
     if: ${{ github.ref_name != 'main' }}
     runs-on: ubuntu-latest
     strategy:
@@ -152,17 +185,15 @@ jobs:
       matrix:
         UNIX_BASE:
           - ubuntu:focal
-          - skiffos/skiff-core-linux4tegra:latest
         include:
           - UNIX_BASE: ubuntu:focal
             UNIX_SHORT: dev
             PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
-          - UNIX_BASE: skiffos/skiff-core-linux4tegra:latest
-            UNIX_SHORT: dev_jetson
-            PLATFORMS: "linux/arm/v7"
     env:
-      IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
-      IMAGE_NAME: flight_stack
+      # IMAGE_URL: ${{ secrets.GITLAB_REGISTRY_IMAGE_URL }}
+      # IMAGE_NAME: flight_stack
+      IMAGE_URL: ${{ secrets.DOCKERHUB_REGISTRY_USER }}
+      IMAGE_NAME: flightstack
       COMMIT_HASH: ${{ github.sha }}
       ROS_DISTRO: noetic
       UNIX_BASE: ubuntu:focal
@@ -181,23 +212,23 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2.2.1
 
-      - name: Login to Registry
-        env:
-          DOCKER_USER: ${{secrets.GITLAB_REGISTRY_USER}}
-          DOCKER_PASSWORD: ${{secrets.GITLAB_REGISTRY_PASSWORD}}
-          DOCKER_URL: ${{secrets.GITLAB_REGISTRY_URL}}
-        run: |
-          docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_URL}
-
+      - name: Login to Docker Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{secrets.DOCKERHUB_REGISTRY_USER}}
+          password: ${{secrets.DOCKERHUB_REGISTRY_PASSWORD}}
+          # registry: ${{secrets.GITLAB_REGISTRY_URL}}
+      
       - name: Build Base Image (${{ matrix.UNIX_SHORT }})
+        if : ${{ needs.paths-filter.outputs.base == 'true' }}
         env:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
              docker buildx build \
                --platform=${{ matrix.PLATFORMS }} \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}_base:${{ matrix.UNIX_SHORT }} \
-               --tag ${IMAGE_URL}/${IMAGE_NAME}_base:${COMMIT_HASH::6} \
-               --build-arg VERSION="${COMMIT_HASH::6}" \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}-base:${{ matrix.UNIX_SHORT }} \
+               --tag ${IMAGE_URL}/${IMAGE_NAME}-base:${COMMIT_HASH::7} \
+               --build-arg VERSION="${COMMIT_HASH::7}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
                --build-arg ROS_BUILD_DISTRO="${ROS_DISTRO}" \
                --build-arg UNIX_BASE="${{ matrix.UNIX_BASE }}" \
@@ -205,7 +236,7 @@ jobs:
                -f ./common/rootfs_part/coreenv/flightstack/Dockerfile.base \
                ./common/rootfs_part/coreenv/flightstack/
 
-      - name: Build Base Image (${{ matrix.UNIX_SHORT }})
+      - name: Build Skiff Image (${{ matrix.UNIX_SHORT }})
         env:
           BUILD_TIMESTAMP: ${{ steps.date.outputs.date }}
         run: >
@@ -213,9 +244,10 @@ jobs:
                --platform=${{ matrix.PLATFORMS }} \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:${{ matrix.UNIX_SHORT }} \
                --tag ${IMAGE_URL}/${IMAGE_NAME}:${COMMIT_HASH::6} \
+               --build-arg BASE_REGISTRY="${IMAGE_URL}/${IMAGE_NAME}-base" \
+               --build-arg BASE_TAG="${{ matrix.UNIX_SHORT }}" \
                --build-arg VERSION="${COMMIT_HASH::6}" \
                --build-arg BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
-               --build-arg FS_TAG="${{ matrix.UNIX_SHORT }}" \
                --compress --force-rm --push \
                -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
                ./common/rootfs_part/coreenv/flightstack/

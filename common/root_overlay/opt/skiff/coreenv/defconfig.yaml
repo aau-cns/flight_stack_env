@@ -1,6 +1,8 @@
 containers:
+  # INFO: the default container sets up the flightstack user
+  #       and mounts the flightstack drive to home
   flightstack:
-    image: aau-cns-docker/docker_registry/flight_stack:latest
+    image: aaucns/flightstack:latest
     entrypoint: ["/lib/systemd/systemd"]
     env:
       - "container=docker"
@@ -12,16 +14,21 @@ containers:
     tty: true
     disableInit: true
     workingDirectory: /home/flightstack
+    # default DNS servers
+    dns: ["1.1.1.1", "8.8.8.8"]
     mounts:
       - /dev:/dev
       - /etc/hostname:/etc/hostname:ro
+      - /etc/resolv.conf:/etc/resolv.conf:ro
       - /lib/modules:/lib/modules:ro
       - /sys:/sys
       - /mnt:/mnt
       - /run/udev:/run/udev
-      - /etc/resolv.conf:/etc/resolv.conf:ro
+      - /mnt/persist/skiff/core/repos/apt:/var/lib/apt
+      - /mnt/persist/skiff/core/repos/linux:/usr/src
+      - /mnt/persist/skiff/core/repos/log:/var/log
+      - /mnt/persist/skiff/core/repos/tmp:/var/tmp
       - /mnt/persist/flightstack:/home/flightstack
-      - /mnt/persist/core:/home/core
     privileged: true
     startAfterCreate: true
     restartPolicy: "always"
@@ -32,14 +39,12 @@ containers:
     hostNetwork: true
     securityOpt:
       - seccomp=unconfined
+    tmpFs:
+      /run: rw,noexec,nosuid,size=65536k
+      /run/lock: rw,noexec,nosuid,size=65536k
+# INFO: by default the flightstack image only provides the 
+#       flightstack user
 users:
-  core:
-    container: flightstack
-    containerUser: core
-    containerShell:
-      - "/bin/bash"
-    auth:
-      copyRootKeys: true
   flightstack:
     container: flightstack
     containerUser: flightstack
@@ -47,33 +52,38 @@ users:
       - "/bin/bash"
     auth:
       copyRootKeys: true
+# INFO: here the images for the flightstack are defined
+#       Only the final Skiff Image is by default used,
+#       which should be pulled from Dockerhub.
 images:
-  aau-cns-docker/docker_registry/flight_stack:latest:
+  aaucns/flightstack:latest:
     pull:
       # images are provided for arm64, arm, amd64
       # also an option: policy: ifbuildfails
       policy: ifnotexists
-      registry: gitlab.aau.at:5050
     build:
       source: /mnt/rootfs/coreenv/flightstack
       dockerfile: Dockerfile
       squash: true
       buildArgs:
-        VERSION: 1.0.0-rc1
-        BUILD_TIMESTAMP: internal
+        BASE_REGISTRY: aaucns/flightstack-base
         BASE_TAG: latest
-  aau-cns-docker/docker_registry/flight_stack_base:latest:
-    pull:
-      # images are provided for arm64, arm, amd64
-      # also an option: policy: ifbuildfails
-      policy: ifnotexists
-      registry: gitlab.aau.at:5050
-    build:
-      source: /mnt/rootfs/coreenv/flightstack
-      dockerfile: Dockerfile.base
-      squash: true
-      buildArgs:
-        ROS_BUILD_DISTRO: noetic
-        VERSION: 1.0.0-rc1
         BUILD_TIMESTAMP: internal
-        UNIX_BASE: ubuntu:focal
+        VERSION: 1.0.0-rc1
+  # INFO: uncomment the following, if issues with pulling 
+  #       the base image exist
+  #
+  # aaucns/flightstack-base:latest:
+  #   pull:
+  #     # images are provided for arm64, arm, amd64
+  #     # also an option: policy: ifnotexists
+  #     policy: ifbuildfails
+  #   build:
+  #     source: /mnt/rootfs/coreenv/flightstack
+  #     dockerfile: Dockerfile.base
+  #     squash: true
+  #     buildArgs:
+  #       ROS_BUILD_DISTRO: noetic
+  #       VERSION: 1.0.0-rc1
+  #       BUILD_TIMESTAMP: internal
+  #       UNIX_BASE: ubuntu:focal

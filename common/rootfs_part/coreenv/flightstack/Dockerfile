@@ -10,17 +10,21 @@
 # You can contact the authors at <christian.brommer@aau.at>
 # and <martin.scheiber@aau.at>.
 
+################################################################################
+# SINGLE STAGE - SKIFFOS USER SETUP
+################################################################################
 # setup stage
-ARG BASE_REGISTRY=gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack_base
+ARG BASE_REGISTRY=aaucns/flightstack-base
 ARG BASE_TAG=latest
 FROM ${BASE_REGISTRY}:${BASE_TAG} AS base
 ARG VERSION
 ARG BUILD_TIMESTAMP
 
-LABEL author="Christian Brommer <christian.brommer@ieee.org>"
-LABEL author="Martin Scheiber <martin.scheiber@ieee.org>"
-LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
+# labels
+LABEL authors.author1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL authors.author2="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL maintainers.maintainer1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainers.maintainer2="Martin Scheiber <martin.scheiber@ieee.org>"
 LABEL description="CNS Flight Stack Environment for SkiffOS"
 
 # flightstack environment
@@ -52,7 +56,7 @@ RUN \
 
 # create service for initiating flightstack user
 RUN ln -s /opt/skiff-flightstack/init/init-home-flightstack.service /etc/systemd/system/ \
-  ln -s /opt/skiff-flightstack/init/init-home-flightstack.service /etc/systemd/system/multi-user.target.wants/
+  && ln -s /opt/skiff-flightstack/init/init-home-flightstack.service /etc/systemd/system/multi-user.target.wants/
 
 # mask conflicting services
 RUN systemctl set-default multi-user.target && \
