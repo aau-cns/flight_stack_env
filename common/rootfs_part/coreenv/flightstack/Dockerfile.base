@@ -10,6 +10,9 @@
 # You can contact the authors at <christian.brommer@aau.at>
 # and <martin.scheiber@aau.at>.
 
+################################################################################
+# 1. STAGE - FLIGHT STACK SETUP
+################################################################################
 ARG UNIX_BASE=ubuntu:focal
 FROM $UNIX_BASE AS stage1
 
@@ -20,10 +23,10 @@ ARG ROS_BUILD_DISTRO="noetic"
 ARG TIMEZONE="Etc/UTC"
 
 # labels
-LABEL author="Christian Brommer <christian.brommer@ieee.org>"
-LABEL author="Martin Scheiber <martin.scheiber@ieee.org>"
-LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL authors.author1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL authors.author2="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL maintainers.maintainer1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainers.maintainer2="Martin Scheiber <martin.scheiber@ieee.org>"
 LABEL description="CNS Flight Stack Environment"
 
 # setup environment
@@ -190,13 +193,19 @@ RUN \
 # select correct repository dependin on ARM or non ARM repos
 RUN if [ $(uname -i) = "x86_64" ]; then add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"; else add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"; fi
 
+################################################################################
+# FINAL STAGE - FLATTEN
+################################################################################
 # flatten image
 FROM scratch as stage2
-LABEL author="Christian Brommer <christian.brommer@ieee.org>"
-LABEL author="Martin Scheiber <martin.scheiber@ieee.org>"
-LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
-LABEL description="CNS Flight Stack Environment for SkiffOS"
+
+# labels
+LABEL authors.author1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL authors.author2="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL maintainers.maintainer1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainers.maintainer2="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL description="CNS Flight Stack Environment - Base Image"
+# image arguments
 ARG VERSION
 ARG BUILD_TIMESTAMP
 ARG ROS_BUILD_DISTRO
