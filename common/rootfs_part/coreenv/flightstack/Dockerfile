@@ -10,44 +10,33 @@
 # You can contact the authors at <christian.brommer@aau.at>
 # and <martin.scheiber@aau.at>.
 
+################################################################################
+# SINGLE STAGE - SKIFFOS USER SETUP
+################################################################################
 # setup stage
-ARG FS_TAG=latest
-FROM gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack_base:${FS_TAG} AS base
+ARG BASE_REGISTRY=aaucns/flightstack-base
+ARG BASE_TAG=latest
+FROM ${BASE_REGISTRY}:${BASE_TAG} AS base
 ARG VERSION
 ARG BUILD_TIMESTAMP
 
-LABEL author="Christian Brommer <christian.brommer@ieee.org>"
-LABEL author="Martin Scheiber <martin.scheiber@ieee.org>"
-LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
+# labels
+LABEL authors.author1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL authors.author2="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL maintainers.maintainer1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainers.maintainer2="Martin Scheiber <martin.scheiber@ieee.org>"
 LABEL description="CNS Flight Stack Environment for SkiffOS"
 
 # flightstack environment
 ENV FLIGHTSTACK_VERSION=${VERSION} \
-    FLIGHTSTACK_BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
+  FLIGHTSTACK_BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
 
 # Show the user list in lightdm
 RUN \
-    mkdir -p /etc/lightdm/lightdm.conf.d && \
-    printf '[Seat:*]\ngreeter-hide-users=false\n' > /etc/lightdm/lightdm.conf.d/01-enable-users.conf
+  mkdir -p /etc/lightdm/lightdm.conf.d && \
+  printf '[Seat:*]\ngreeter-hide-users=false\n' > /etc/lightdm/lightdm.conf.d/01-enable-users.conf
 
-RUN \
-  adduser core \
-  --no-create-home \
-  --gecos "Core User" \
-  --shell /bin/bash \
-  --disabled-password && \
-  adduser core audio && \
-  adduser core sudo && \
-  adduser core root && \
-  adduser core systemd-journal && \
-  adduser core dialout && \
-  adduser core plugdev && \
-  mkdir -p /home/core/ && \
-  chown core:core /home/core && \
-  echo "core	ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/core && \
-  chmod 0440 /etc/sudoers.d/core
-
+# switched to flightstack user for CNS flight stack
 RUN \
   adduser flightstack \
   --no-create-home \
@@ -65,25 +54,29 @@ RUN \
   echo "flightstack	ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/flightstack && \
   chmod 0440 /etc/sudoers.d/flightstack
 
+# create service for initiating flightstack user
+RUN ln -s /opt/skiff-flightstack/init/init-home-flightstack.service /etc/systemd/system/ \
+  && ln -s /opt/skiff-flightstack/init/init-home-flightstack.service /etc/systemd/system/multi-user.target.wants/
+
 # mask conflicting services
 RUN systemctl set-default multi-user.target && \
-    systemctl mask tmp.mount && \
-    (systemctl mask NetworkManager ModemManager wpa_supplicant) && \
-    find /etc/systemd/system \
-        /lib/systemd/system \
-        \( -path '*.wants/*' \
-        -name '*swapon*' \
-        -or -name '*ntpd*' \
-        -or -name '*resolved*' \
-        -or -name '*udev*' \
-        -or -name '*freedesktop*' \
-        -or -name '*remount-fs*' \
-        -or -name '*getty*' \
-        -or -name '*systemd-sysctl*' \
-        -or -name '*.mount' \
-        -or -name '*remote-fs*' \) \
-        -exec echo \{} \; \
-        -exec rm \{} \;
+  systemctl mask tmp.mount && \
+  (systemctl mask NetworkManager ModemManager wpa_supplicant) && \
+  find /etc/systemd/system \
+  /lib/systemd/system \
+  \( -path '*.wants/*' \
+  -name '*swapon*' \
+  -or -name '*ntpd*' \
+  -or -name '*resolved*' \
+  -or -name '*udev*' \
+  -or -name '*freedesktop*' \
+  -or -name '*remount-fs*' \
+  -or -name '*getty*' \
+  -or -name '*systemd-sysctl*' \
+  -or -name '*.mount' \
+  -or -name '*remote-fs*' \) \
+  -exec echo \{} \; \
+  -exec rm \{} \;
 
 # Mask unneeded service to prevent it from failing
 RUN systemctl mask kmod-static-nodes

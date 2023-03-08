@@ -31,7 +31,7 @@ corresponding paper and consult the `LICENSE` file for a detailed explanation.
 
 ## Setup
 ### New SkiffOS Workspace
-We provide a fully setup SkiffOS workspace with [github.com/aau-cns/flight_stack_skiffos](https://github.com/aau-cns/flight_stack_skiffos). You can set this up as follows and then continue below with the [build instructions](#usage).
+We provide a full setup SkiffOS workspace with [github.com/aau-cns/flight_stack_skiffos](https://github.com/aau-cns/flight_stack_skiffos). You can set this up as follows and then continue below with the [build instructions](#usage).
 
 ```bash
 git clone https://github.com/aau-cns/flight_stack_skiffos.git
@@ -70,7 +70,7 @@ export SKIFF_CONFIG=odroid/xu,flightstack/full
 ```
 
 ### Build for Virtual Environments
-For virtual environments such as the virtualbox or v86, use the virtual command from the flight stack
+For virtual environments such as the virtualbox or v86, use the virtual environment from the flight stack. This excludes the WiFi driver, which is not required for virtual environments.
 
 ```bash
 # for virtualbox use
@@ -89,26 +89,21 @@ Optionally you can also pull a pre-compiled docker container for the flight stac
 systemctl stop skiff-core
 ```
 
-2. Delete the previously built image
+2. Delete the previously built image 
 
 ```sh
-docker rmi core
+docker rmi aaucns/flightstack
+# additionally if a container was already instatiated, remove that as well
+docker rm -f flightstack
 ```
 
 3. Pull the image
 
 ```sh
-docker pull gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack:latest
-```
-4. Rename the image
-
-```sh
-docker tag \
-  gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack \
-  aau-cns-docker/docker_registry/flight_stack:latest
+docker pull aaucns/flightstack:latest
 ```
 
-5. Restart the skiff-core service
+4. Restart the skiff-core service
 
 ```sh
 systemctl start skiff-core
@@ -121,13 +116,13 @@ systemctl start skiff-core
 Images are auto-built through the GitHub workflows. If you want to (cross-) compile them on your own device use
 
 ```bash
-export DOCKER_REGISTRY=gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack
+export DOCKER_REGISTRY=aaucns/flightstack
 
 # compile base image
 docker buildx build \
   --platform=linux/amd64,linux/arm64,linux/arm/v7 \
-  --tag ${DOCKER_REGISTRY}_base:dev \
-  --tag ${DOCKER_REGISTRY}_base:$(git log -1 --pretty=%h) \
+  --tag ${DOCKER_REGISTRY}-base:dev \
+  --tag ${DOCKER_REGISTRY}-base:$(git log -1 --pretty=%h) \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
   --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
   --build-arg ROS_BUILD_DISTRO="noetic" \
@@ -142,9 +137,10 @@ docker buildx build \
   --platform=linux/amd64,linux/arm64,linux/arm/v7 \
   --tag ${DOCKER_REGISTRY}:dev \
   --tag ${DOCKER_REGISTRY}:$(git log -1 --pretty=%h) \
+  --build-arg BASE_REGISTRY="${DOCKER_REGISTRY}-base" \
+  --build-arg BASE_TAG="dev" \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
   --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
-  --build-arg FS_TAG="latest" \
   --compress --force-rm \
   -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
   ./common/rootfs_part/coreenv/flightstack/
@@ -154,13 +150,13 @@ docker buildx build \
 If you want to compile for other hardware, feel free to edit the `platform` and `UNIX_BASE` variables. E.g., for the `jetson`, the build steps are
 
 ```bash
-export DOCKER_REGISTRY=gitlab.aau.at:5050/aau-cns-docker/docker_registry/flight_stack
+export DOCKER_REGISTRY=aaucns/flightstack
 
 # compile base image
 docker buildx build \
   --platform=linux/arm/v7 \
-  --tag ${DOCKER_REGISTRY}_base:dev_jetson \
-  --tag ${DOCKER_REGISTRY}_base:$(git log -1 --pretty=%h) \
+  --tag ${DOCKER_REGISTRY}-base:dev_jetson \
+  --tag ${DOCKER_REGISTRY}-base:$(git log -1 --pretty=%h) \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
   --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
   --build-arg ROS_BUILD_DISTRO="noetic" \
@@ -175,9 +171,10 @@ docker buildx build \
   --platform=linux/arm/v7 \
   --tag ${DOCKER_REGISTRY}:dev_jetson \
   --tag ${DOCKER_REGISTRY}:$(git log -1 --pretty=%h) \
+  --build-arg BASE_REGISTRY="${DOCKER_REGISTRY}-base" \
+  --build-arg BASE_TAG="dev_jetson" \
   --build-arg VERSION="$(git log -1 --pretty=%h)" \
   --build-arg BUILD_TIMESTAMP="$( date '+%F-%H-%M-%S' )" \
-  --build-arg FS_TAG="dev_jetson" \
   --compress --force-rm \
   -f ./common/rootfs_part/coreenv/flightstack/Dockerfile \
   ./common/rootfs_part/coreenv/flightstack/

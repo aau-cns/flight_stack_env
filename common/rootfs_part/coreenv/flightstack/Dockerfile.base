@@ -10,20 +10,23 @@
 # You can contact the authors at <christian.brommer@aau.at>
 # and <martin.scheiber@aau.at>.
 
+################################################################################
+# 1. STAGE - FLIGHT STACK SETUP
+################################################################################
 ARG UNIX_BASE=ubuntu:focal
 FROM $UNIX_BASE AS stage1
 
 # other input arguments
 ARG VERSION
 ARG BUILD_TIMESTAMP
-ARG ROS_BUILD_DISTRO
+ARG ROS_BUILD_DISTRO="noetic"
 ARG TIMEZONE="Etc/UTC"
 
 # labels
-LABEL author="Christian Brommer <christian.brommer@ieee.org>"
-LABEL author="Martin Scheiber <martin.scheiber@ieee.org>"
-LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL authors.author1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL authors.author2="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL maintainers.maintainer1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainers.maintainer2="Martin Scheiber <martin.scheiber@ieee.org>"
 LABEL description="CNS Flight Stack Environment"
 
 # setup environment
@@ -109,7 +112,7 @@ RUN git clone --branch v2.4.0 https://github.com/mvp/uhubctl \
 
 # home directory scripts
 COPY ./home /opt/skiff-core/home
-COPY ./init_scripts /opt/skiff-core/init
+COPY ./init_scripts /opt/skiff-flightstack/init
 
 # system configuration
 COPY ./etc /etc
@@ -118,10 +121,10 @@ COPY ./etc /etc
 # COPY ./udev/rules.d/ /etc/udev/rules.d/
 
 # copy workspace to root
-WORKDIR /opt/ros_cws/
-RUN git clone https://github.com/aau-cns/flight_stack cns_flightstack_cws \
-    && cd cns_flightstack_cws \
-    && git submodule update --init --recursive
+# WORKDIR /opt/ros_cws/
+# RUN git clone https://github.com/aau-cns/flight_stack cns_flightstack_cws \
+#     && cd cns_flightstack_cws \
+#     && git submodule update --init --recursive
 
 ## install python dependencies (depending on ros version)
 RUN \
@@ -129,27 +132,27 @@ RUN \
     echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list && \
     apt-get update && \
     if [ $ROS_DISTRO = noetic ] || [ $(lsb_release -sc) = focal ]; then \
-      apt-get install --no-install-recommends -y \
-      python3-rosdep \
-      python3-rosinstall \
-      python3-vcstools \
-      python3-catkin-tools \
-      python3-pip \
-      python3-rosinstall-generator \
-      python3-future \
-      python3-lxml; \
-      pip3 install typing; \
+    apt-get install --no-install-recommends -y \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-vcstools \
+    python3-catkin-tools \
+    python3-pip \
+    python3-rosinstall-generator \
+    python3-future \
+    python3-lxml; \
+    pip3 install typing; \
     else \
-      apt-get install --no-install-recommends -y \
-      python-rosdep \
-      python-rosinstall \
-      python-vcstools \
-      python-catkin-tools \
-      python-pip \
-      python-rosinstall-generator \
-      python-future \
-      python-lxml; \
-      pip install typing; \
+    apt-get install --no-install-recommends -y \
+    python-rosdep \
+    python-rosinstall \
+    python-vcstools \
+    python-catkin-tools \
+    python-pip \
+    python-rosinstall-generator \
+    python-future \
+    python-lxml; \
+    pip install typing; \
     fi \
     && rm -rf /var/lib/apt/lists/*
 
@@ -163,9 +166,9 @@ RUN apt-get update && apt-get install ca-cacert && \
 WORKDIR /opt/flightstack
 RUN \
     if [ $ROS_DISTRO = noetic ]; then \
-      export ROS_BASE_VERSION="1.5.0-1*"; \
+    export ROS_BASE_VERSION="1.5.0-1*"; \
     else \
-      export ROS_BASE_VERSION="1.4.1-0*"; \
+    export ROS_BASE_VERSION="1.4.1-0*"; \
     fi \
     && rosdep init \
     && rosdep update \
@@ -190,13 +193,19 @@ RUN \
 # select correct repository dependin on ARM or non ARM repos
 RUN if [ $(uname -i) = "x86_64" ]; then add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"; else add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"; fi
 
+################################################################################
+# FINAL STAGE - FLATTEN
+################################################################################
 # flatten image
 FROM scratch as stage2
-LABEL author="Christian Brommer <christian.brommer@ieee.org>"
-LABEL author="Martin Scheiber <martin.scheiber@ieee.org>"
-LABEL maintainer="Christian Brommer <christian.brommer@ieee.org>"
-LABEL maintainer="Martin Scheiber <martin.scheiber@ieee.org>"
-LABEL description="CNS Flight Stack Environment for SkiffOS"
+
+# labels
+LABEL authors.author1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL authors.author2="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL maintainers.maintainer1="Christian Brommer <christian.brommer@ieee.org>"
+LABEL maintainers.maintainer2="Martin Scheiber <martin.scheiber@ieee.org>"
+LABEL description="CNS Flight Stack Environment - Base Image"
+# image arguments
 ARG VERSION
 ARG BUILD_TIMESTAMP
 ARG ROS_BUILD_DISTRO
