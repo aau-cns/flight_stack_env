@@ -15,7 +15,7 @@
 ################################################################################
 # setup stage
 ARG BASE_REGISTRY=aaucns/flightstack-base
-ARG BASE_TAG=latest
+ARG BASE_TAG=stable
 FROM ${BASE_REGISTRY}:${BASE_TAG} AS base
 ARG VERSION
 ARG BUILD_TIMESTAMP

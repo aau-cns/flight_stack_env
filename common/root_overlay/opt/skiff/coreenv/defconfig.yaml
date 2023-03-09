@@ -2,7 +2,7 @@ containers:
   # INFO: the default container sets up the flightstack user
   #       and mounts the flightstack drive to home
   flightstack:
-    image: aaucns/flightstack:latest
+    image: aaucns/flightstack:stable
     entrypoint: ["/lib/systemd/systemd"]
     env:
       - "container=docker"
@@ -56,7 +56,7 @@ users:
 #       Only the final Skiff Image is by default used,
 #       which should be pulled from Dockerhub.
 images:
-  aaucns/flightstack:latest:
+  aaucns/flightstack:stable:
     pull:
       # images are provided for arm64, arm, amd64
       # also an option: policy: ifbuildfails
@@ -67,13 +67,13 @@ images:
       squash: true
       buildArgs:
         BASE_REGISTRY: aaucns/flightstack-base
-        BASE_TAG: latest
+        BASE_TAG: stable
         BUILD_TIMESTAMP: internal
         VERSION: 1.0.0-rc1
   # INFO: uncomment the following, if issues with pulling 
   #       the base image exist
   #
-  # aaucns/flightstack-base:latest:
+  # aaucns/flightstack-base:stable:
   #   pull:
   #     # images are provided for arm64, arm, amd64
   #     # also an option: policy: ifnotexists

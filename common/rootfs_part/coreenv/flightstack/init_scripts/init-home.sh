@@ -232,8 +232,10 @@ if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
   print_debug "Setting up ${WS_OUT_NAME} for ${USER_ID}..."
   print_debug "Pulling remote WS"
 
-  cd /home/${USER_ID}/ && git clone https://github.com/aau-cns/flight_stack ${WS_OUT_NAME} \
-    && cd /home/${USER_ID}/${WS_OUT_NAME}/ && git submodule update --init --recursive
+  cd /home/${USER_ID}/ \
+    && git clone -b stable --single-branch https://github.com/aau-cns/flight_stack ${WS_OUT_NAME} \
+    && cd /home/${USER_ID}/${WS_OUT_NAME}/ \
+    && git submodule update --init --recursive
 
   # setup commands
   WS_EXTENSION="/opt/ros/${ROS_DISTRO}"
