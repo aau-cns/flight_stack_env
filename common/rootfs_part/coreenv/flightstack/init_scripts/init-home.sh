@@ -279,6 +279,17 @@ EOF
   print_job_end_sub "setup flightstack catkin workspace"
 fi
 
+# check if launch scripts are installed
+print_job_start_sub "installing flightstack launch scripts"
+if [[ ! -f "/usr/bin/fs_op" || ! -f "/usr/bin/fs_dev1" || ! -f "/usr/bin/fs_dev2" || ! -f "/usr/bin/fs_remote" ]]; then
+  ## setup flightstack workspace
+  # remove existing links
+  rm -rf /usr/bin/fs_*
+  # link files again
+  /home/${USER_ID}/${WS_OUT_NAME}/scripts/install_scripts.sh
+fi
+print_job_end_sub "installing flightstack launch scripts"
+
 ## CHANGING OWNERSHIP OF HOME
 print_debug "Chowning mount for ${USER_ID}..."
 chown -R ${USER_ID}:${USER_ID} /home/${USER_ID}
