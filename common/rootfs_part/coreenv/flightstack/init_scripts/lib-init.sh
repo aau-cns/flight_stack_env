@@ -112,6 +112,17 @@ check_home_directory() {
     print_log "User ${user_id} already initiated."
   fi
 
+  ## Check .bashrc for .ros_env.bash
+  print_log "Checking .bashrc for ROS sourcing"
+  if $(grep -q ".ros_env.bash" "/home/${user_id}/.bashrc"); then 
+    print_log "  -> ROS sourcing found in '/home/${user_id}/.bashrc'"
+  else
+    print_log "  -> Not found: addint ROS sourcing"
+    echo "" >> "/home/${user_id}/.bashrc"
+    echo "# Source ROS environment" >> "/home/${user_id}/.bashrc"
+    echo "source /home/${user_id}/.ros_env.bash" >> "/home/${user_id}/.bashrc"
+  fi
+
   ## CHANGING OWNERSHIP OF HOME
   print_log "Chowning mount for ${user_id}..."
   sudo chown -R ${user_id}:${user_id} /home/${user_id}
