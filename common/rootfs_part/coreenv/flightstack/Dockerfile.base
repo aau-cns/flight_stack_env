@@ -60,6 +60,7 @@ RUN \
     aptitude \
     autoconf \
     autotools-dev \
+    bash-completion \
     build-essential \
     ca-certificates \
     cmake \

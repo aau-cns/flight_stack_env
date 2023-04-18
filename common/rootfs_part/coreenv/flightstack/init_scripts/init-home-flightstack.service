@@ -1,8 +1,8 @@
 [Unit]
 Description=Init core home directory
 DefaultDependencies=no
-Requires=home-core.mount network.target
-After=home-core.mount network-online.target
+Requires=home-flightstack.mount network.target
+After=home-flightstack.mount network-online.target
 
 [Service]
 Type=oneshot

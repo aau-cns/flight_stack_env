@@ -51,7 +51,7 @@ RUN \
   adduser flightstack plugdev && \
   mkdir -p /home/flightstack/ && \
   chown flightstack:flightstack /home/flightstack && \
-  echo "flightstack	ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/flightstack && \
+  echo "flightstack ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/flightstack && \
   chmod 0440 /etc/sudoers.d/flightstack
 
 # create service for initiating flightstack user

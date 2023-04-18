@@ -17,6 +17,42 @@
 set -eo pipefail
 
 ################################################################################
+# Source INIT Lib script                                                       #
+################################################################################
+
+# setup the path for the library -- use the second option for debug on non-skiff system
+FS_INIT_PATH=/opt/skiff-flightstack/init
+#FS_INIT_PATH=$PWD
+
+if [ ! -f "${FS_INIT_PATH}/lib-init.sh" ]; then
+  # in case the library does not exist define the required functions here
+  
+  function print_local {
+    STRING=${1}
+    echo "  ${STRING}"
+  }
+  function print_log {
+    print_local $1
+  }
+  function print_job_start {
+    print_local $1
+  }
+  function print_job_end {
+    print_local $1
+  }
+  function print_job_start_sub {
+    print_local $1
+  }
+  function print_job_end_sub {
+    print_local $1
+  }
+else
+  # load library
+  source ${FS_INIT_PATH}/lib-init.sh
+  print_log "Succesfully loaded library"
+fi
+
+################################################################################
 # Global Variables                                                             #
 ################################################################################
 
@@ -53,44 +89,6 @@ function print_usage {
   echo "    -d          detailed verbose output"
   echo "    -h          print this help"
   echo ""
-}
-
-################################################################################
-# printer Helper Function                                                        #
-################################################################################
-
-function print_debug {
-  STRING=${1}
-  if [ ${VERBOSE} = true ]; then
-    echo "  ${STRING}"
-  fi
-}
-
-function print_log {
-  STRING=${1}
-  echo "  ${STRING}"
-}
-
-function print_job_start {
-  STRING=${1}
-  echo "[JOB ${JOB_NUM}/${TOTAL_JOBS}] >>> ${STRING}..."
-}
-
-function print_job_end {
-  STRING=${1}
-  echo "[JOB ${JOB_NUM}/${TOTAL_JOBS}] <<< ${STRING} - DONE"
-  JOB_NUM=$(( JOB_NUM+1 ))
-}
-
-function print_job_start_sub {
-  STRING=${1}
-  echo "[JOB ${JOB_NUM}.${JOB_SUB}/${TOTAL_JOBS}] >>> ${STRING}..."
-}
-
-function print_job_end_sub {
-  STRING=${1}
-  echo "[JOB ${JOB_NUM}.${JOB_SUB}/${TOTAL_JOBS}] <<< ${STRING} - DONE"
-  JOB_SUB=$(( JOB_SUB+1 ))
 }
 
 ################################################################################
@@ -189,43 +187,13 @@ if [ ! ${VERBOSE} = true ]; then
   CATKIN_ADD="${CATKIN_ADD} --no-status -s"
 fi
 
+# JOB 1: check ROS version
+check_ros_distro
 
-# check if ROS_VERSION is available
-print_job_start "check \$ROS_DISTRO"
-if [ -z ${ROS_DISTRO} ]; then
-  ROS_DISTRO=$(ls /opt/ros/)
-  print_debug "ROS_DISTRO not found, setting to ${ROS_DISTRO}"
-else
-  print_debug "ROS_DISTRO found: ${ROS_DISTRO}"
-fi
-print_job_end "check \$ROS_DISTRO"
+# JOB 2: check user's home directory setup
+check_home_directory ${USER_ID}
 
-# check if user has home directory setup
-print_job_start "setup home directory..."
-if [ ! -f /home/${USER_ID}/.user_initated ]; then
-  print_debug "Setting up /etc/skel for ${USER_ID}..."
-  sudo rsync -rhv \
-    --ignore-existing  \
-    --owner --group \
-    --chown ${USER_ID}:${USER_ID} \
-    /etc/skel/ /home/${USER_ID}/
-
-  print_debug "Setting up configs for ${USER_ID}..."
-  sudo rsync -rhv \
-    --ignore-existing  \
-    /opt/skiff-core/home/ /home/${USER_ID}/
-  echo "source /home/${USER_ID}/.ros_env.bash" >> ${HOME}/.bashrc
-
-  sudo touch /home/${USER_ID}/.user_initated
-else
-  print_log "User ${USER_ID} already initiated."
-fi
-
-## CHANGING OWNERSHIP OF HOME
-print_log "Chowning mount for ${USER_ID}..."
-sudo chown -R ${USER_ID}:${USER_ID} /home/${USER_ID}
-print_job_end "setup home directory"
-
+# JOB 3: check if flightstack user has workspace setup
 print_job_start "setup flightstack workspace"
 ## COPY AND SETUP FLIGHTSTACK WORKSPACE
 if [ ! -d /home/${USER_ID}/${WS_OUT_NAME} ]; then
@@ -310,6 +278,17 @@ EOF
   setup_workspace "/home/${USER_ID}/${WS_OUT_NAME}/" "${WS_EXTENSION}" "${AUTOBUILD}"
   print_job_end_sub "setup flightstack catkin workspace"
 fi
+
+# check if launch scripts are installed
+print_job_start_sub "installing flightstack launch scripts"
+if [[ ! -f "/usr/bin/fs_op" || ! -f "/usr/bin/fs_dev1" || ! -f "/usr/bin/fs_dev2" || ! -f "/usr/bin/fs_remote" ]]; then
+  ## setup flightstack workspace
+  # remove existing links
+  sudo rm -rf /usr/bin/fs_*
+  # link files again
+  /home/${USER_ID}/${WS_OUT_NAME}/scripts/install_scripts.sh
+fi
+print_job_end_sub "installing flightstack launch scripts"
 
 ## CHANGING OWNERSHIP OF HOME
 print_debug "Chowning mount for ${USER_ID}..."
