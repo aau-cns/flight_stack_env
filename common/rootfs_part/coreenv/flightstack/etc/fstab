@@ -1,1 +1,2 @@
-LABEL=flightstack_drive /data auto noauto,x-systemd.automount 0 2
+# LABEL=flightstack_drive /data auto noauto,x-systemd.automount 0 2
+# /dev/sda1       /data/extdrive   auto    rw,x-mount.mkdir,umask=002,uid=flightstack,gid=flightstack  0       2
